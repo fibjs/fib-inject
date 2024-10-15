@@ -16,6 +16,7 @@
 #ifndef LIEF_EXCEPTIONS_H_
 #define LIEF_EXCEPTIONS_H_
 
+#include <stdint.h>
 #include <exception>
 #include <stdexcept>
 #include <string>

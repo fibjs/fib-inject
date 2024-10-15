@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
+include(fib-addon/common.cmake)
+
 option(LIEF_DOC "Build LIEF docs" OFF)
 option(LIEF_C_API "C API" OFF)
 option(LIEF_PYTHON_API "Build LIEF Python API" OFF)
@@ -17,8 +19,6 @@ if(MSVC)
 endif()
 
 add_subdirectory(vender/LIEF)
-
-include(fib-addon/common.cmake)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/vender/LIEF/include
