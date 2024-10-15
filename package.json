@@ -1,0 +1,30 @@
+{
+  "name": "fib-inject",
+  "version": "1.0.0",
+  "description": "fibjs binding for inject representation and classification.",
+  "main": "index.js",
+  "scripts": {
+    "install": "node-pre-gyp install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fibjs/fib-inject.git"
+  },
+  "keywords": [
+    "inject",
+    "fib-inject"
+  ],
+  "author": "lion",
+  "license": "MIT",
+  "homepage": "https://github.com/fibjs/fib-inject",
+  "binary": {
+    "module_name": "fib-inject",
+    "module_path": "./addon",
+    "remote_path": "{version}",
+    "package_name": "{module_name}-{platform}-{arch}-release.tar.gz",
+    "host": "https://github.com/fibjs/fib-inject/releases/download/"
+  },
+  "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.11"
+  }
+}

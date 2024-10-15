@@ -1,0 +1,6 @@
+/out
+/bin
+/addon
+/temp/*
+/test/inject.exe
+/.vscode/launch.json
