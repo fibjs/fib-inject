@@ -12,7 +12,7 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
     }
 
     try {
-        fs.access(filename, fs.constants.R_OK | fs.constants.W_OK);
+        fs.accessSync(filename, fs.constants.R_OK | fs.constants.W_OK);
     } catch {
         throw new Error("Can't read and write to target executable");
     }
@@ -20,7 +20,7 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
     let executable;
 
     try {
-        executable = fs.readFile(filename);
+        executable = fs.readFileSync(filename);
     } catch {
         throw new Error("Couldn't read target executable");
     }
@@ -149,7 +149,7 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
     }
 
     try {
-        fs.writeFile(filename, buffer);
+        fs.writeFileSync(filename, buffer);
     } catch {
         throw new Error("Couldn't write executable");
     }
