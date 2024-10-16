@@ -38,10 +38,15 @@ inline void postject_options_init(struct postject_options* options)
     options->pe_resource_name = NULL;
 }
 
-static inline char postject_resource_marker()
+static inline volatile char* postject_resource_sentinel()
 {
     static const volatile char* sentinel = POSTJECT_SENTINEL_FUSE ":0";
-    return sentinel[sizeof(POSTJECT_SENTINEL_FUSE)];
+    return sentinel;
+}
+
+static inline char postject_resource_marker()
+{
+    return postject_resource_sentinel()[sizeof(POSTJECT_SENTINEL_FUSE)];
 }
 
 #if defined(__linux__)
