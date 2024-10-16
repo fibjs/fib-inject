@@ -10,8 +10,9 @@
 int main()
 {
     size_t size = 0;
-
-    if (postject_has_resource()) {
+    
+    char marker = postject_resource_marker();
+    if (marker == '1') {
         const void* ptr = postject_find_resource("foobar", &size, NULL);
         if (ptr == NULL) {
             fprintf(stderr, "ptr must not be NULL.\n");
