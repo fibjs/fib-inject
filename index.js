@@ -3,9 +3,9 @@ const path = require('path');
 
 module.exports = inject = require(`./addon/${path.basename(__dirname)}.node`);
 module.exports.inject = function (filename, resourceName, resourceData, options) {
-    const machoSegmentName = options?.machoSegmentName || "__POSTJECT";
+    const machoSegmentName = options?.machoSegmentName || "__FIBINJECT";
     const overwrite = options?.overwrite || false;
-    let sentinelFuse = options?.sentinelFuse || "POSTJECT_SENTINEL_fce680ab2cc467b6e072b8b5df1996b2";
+    let sentinelFuse = options?.sentinelFuse || "FIBINJECT_SENTINEL_d0695dd05effa072dcb0b1f8f807ac40";
 
     if (!Buffer.isBuffer(resourceData)) {
         throw new TypeError("resourceData must be a buffer");
