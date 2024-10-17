@@ -1,0 +1,16 @@
+.github
+.vscode
+.git*
+bin
+out
+include
+src
+temp
+test
+addon
+fib-addon
+tools
+build*
+vender
+CMakeLists.txt
+
