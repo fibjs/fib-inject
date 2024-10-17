@@ -111,6 +111,11 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
     }
 
     const buffer = Buffer.from(data.buffer);
+    const checkResource = buffer.indexOf(resourceData);
+    if (checkResource === -1) {
+        throw new Error("Resource was not injected correctly");
+    }
+
     const firstSentinel = buffer.indexOf(sentinelFuse);
 
     if (firstSentinel === -1) {
