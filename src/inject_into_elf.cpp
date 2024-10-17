@@ -28,6 +28,12 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
         return result;
     }
 
+    LIEF::ELF::ARCH machine_type = binary->header().machine_type();
+    if (machine_type == LIEF::ELF::ARCH::EM_LOONGARCH || machine_type == LIEF::ELF::ARCH::EM_MIPS) {
+        result.Set("result", Napi::Number::New(env, InjectResult::kError));
+        return result;
+    }
+
     LIEF::ELF::Note* existing_note = nullptr;
 
     for (LIEF::ELF::Note& note : binary->notes()) {
