@@ -282,7 +282,7 @@ async function install_addon() {
     const tpath = path.join(__dirname, packageJson.binary.module_path);
     const tname = path.join(tpath, path.basename(file.filename));
 
-    fs.mkdirSync(path.dirname(tpath), { recursive: true });
+    fs.mkdirSync(tpath, { recursive: true });
     fs.writeFileSync(tname, file.fileData);
     fs.chmodSync(tname, parseInt(file.mode, 8));
 
