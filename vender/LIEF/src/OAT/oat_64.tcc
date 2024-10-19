@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,10 @@ void Parser::parse_dex_files<details::OAT64_t>() {
 
 
   for (size_t i = 0; i < nb_dex_files; ++i) {
+    if (i >= oat.oat_dex_files_.size()) {
+      LIEF_WARN("DEX file #{} is out of bound", i);
+      break;
+    }
     uint64_t offset = oat.oat_dex_files_[i]->dex_offset();
 
     LIEF_DEBUG("Dealing with OAT DEX file #{:d} at offset 0x{:x}", i, offset);

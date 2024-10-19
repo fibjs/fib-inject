@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <fstream>
 #include <algorithm>
 
 #include "LIEF/BinaryStream/FileStream.hpp"
@@ -35,7 +34,7 @@ inline bool is_dex(BinaryStream& stream) {
   return false;
 }
 
-inline dex_version_t version(BinaryStream& stream) {
+ dex_version_t version(BinaryStream& stream) {
   using version_t = std::array<char, 4>;
   stream.setpos(0);
   if (!is_dex(stream)) {
@@ -49,7 +48,8 @@ inline dex_version_t version(BinaryStream& stream) {
     if (!are_digits) {
       return 0;
     }
-    return static_cast<dex_version_t>(std::stoul(version.data()));
+    std::string version_str(std::begin(version), std::end(version));
+    return static_cast<dex_version_t>(std::stoul(version_str));
   }
   return 0;
 

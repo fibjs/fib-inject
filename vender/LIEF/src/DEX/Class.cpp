@@ -1,6 +1,6 @@
 
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #include <climits>
 
 #include "LIEF/DEX/Class.hpp"
+#include "LIEF/DEX/Field.hpp"
+#include "LIEF/DEX/Method.hpp"
 #include "LIEF/DEX/hash.hpp"
 
 namespace LIEF {
@@ -194,18 +196,7 @@ void Class::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool Class::operator==(const Class& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Class::operator!=(const Class& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Class& cls) {
   os << cls.pretty_name();

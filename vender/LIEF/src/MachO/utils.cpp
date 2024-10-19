@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <fstream>
-#include <iterator>
 #include <string>
 #include <vector>
 
@@ -36,14 +34,13 @@
 #include "LIEF/MachO/CodeSignatureDir.hpp"
 #include "LIEF/MachO/LinkerOptHint.hpp"
 #include "LIEF/MachO/TwoLevelHints.hpp"
-#include "LIEF/MachO/EnumToString.hpp"
 #include "LIEF/utils.hpp"
 
 #include "Object.tcc"
 
 #include "MachO/Structures.hpp"
 
-#include "LIEF/exception.hpp"
+
 #include "LIEF/BinaryStream/FileStream.hpp"
 #include "LIEF/BinaryStream/SpanStream.hpp"
 #include "logging.hpp"
@@ -53,8 +50,8 @@ namespace LIEF {
 namespace MachO {
 
 inline result<MACHO_TYPES> magic_from_stream(BinaryStream& stream) {
-  stream.setpos(0);
-  if (auto magic_res = stream.read<uint32_t>()) {
+  ScopedStream scoped(stream, 0);
+  if (auto magic_res = scoped->read<uint32_t>()) {
     return static_cast<MACHO_TYPES>(*magic_res);
   }
   return make_error_code(lief_errors::read_error);
@@ -68,7 +65,8 @@ bool is_macho(BinaryStream& stream) {
             magic == MACHO_TYPES::MH_MAGIC_64 ||
             magic == MACHO_TYPES::MH_CIGAM_64 ||
             magic == MACHO_TYPES::FAT_MAGIC ||
-            magic == MACHO_TYPES::FAT_CIGAM);
+            magic == MACHO_TYPES::FAT_CIGAM ||
+            magic == MACHO_TYPES::NEURAL_MODEL);
   }
   return false;
 }
@@ -196,17 +194,15 @@ bool check_valid_paths(const Binary& binary, std::string* error) {
   int dependents_count  = 0;
   for (const LoadCommand& cmd : binary.commands()) {
     switch (cmd.command()) {
-      case LOAD_COMMAND_TYPES::LC_ID_DYLIB:
+      case LoadCommand::TYPE::ID_DYLIB:
         {
           has_install_name = true;
-          /*
-           * Fallback
-           */
+          [[fallthrough]];
         }
-      case LOAD_COMMAND_TYPES::LC_LOAD_DYLIB:
-      case LOAD_COMMAND_TYPES::LC_LOAD_WEAK_DYLIB:
-      case LOAD_COMMAND_TYPES::LC_REEXPORT_DYLIB:
-      case LOAD_COMMAND_TYPES::LC_LOAD_UPWARD_DYLIB:
+      case LoadCommand::TYPE::LOAD_DYLIB:
+      case LoadCommand::TYPE::LOAD_WEAK_DYLIB:
+      case LoadCommand::TYPE::REEXPORT_DYLIB:
+      case LoadCommand::TYPE::LOAD_UPWARD_DYLIB:
         {
           if (!DylibCommand::classof(&cmd)) {
             LIEF_ERR("{} is not associated with a DylibCommand which should be the case",
@@ -214,7 +210,7 @@ bool check_valid_paths(const Binary& binary, std::string* error) {
             break;
           }
           auto& dylib = *cmd.as<DylibCommand>();
-          if (dylib.command() != LOAD_COMMAND_TYPES::LC_ID_DYLIB) {
+          if (dylib.command() != LoadCommand::TYPE::ID_DYLIB) {
             ++dependents_count;
           }
           break;
@@ -223,8 +219,8 @@ bool check_valid_paths(const Binary& binary, std::string* error) {
     }
   }
 
-  const FILE_TYPES ftype = binary.header().file_type();
-  if (ftype == FILE_TYPES::MH_DYLIB) {
+  const Header::FILE_TYPE ftype = binary.header().file_type();
+  if (ftype == Header::FILE_TYPE::DYLIB) {
     if (!has_install_name) {
       if (error) {
         *error = fmt::format(R"delim(
@@ -243,7 +239,8 @@ bool check_valid_paths(const Binary& binary, std::string* error) {
       return false;
     }
   }
-  const bool is_dynamic_exe = ftype == FILE_TYPES::MH_EXECUTE && binary.has(LOAD_COMMAND_TYPES::LC_LOAD_DYLINKER);
+  const bool is_dynamic_exe =
+    ftype == Header::FILE_TYPE::EXECUTE && binary.has(LoadCommand::TYPE::LOAD_DYLINKER);
   if (dependents_count == 0 && is_dynamic_exe) {
       if (error) {
         *error = fmt::format(R"delim(

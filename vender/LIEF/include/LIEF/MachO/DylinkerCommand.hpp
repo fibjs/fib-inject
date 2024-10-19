@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_DYLINKER_COMMAND_H_
-#define LIEF_MACHO_DYLINKER_COMMAND_H_
+#ifndef LIEF_MACHO_DYLINKER_COMMAND_H
+#define LIEF_MACHO_DYLINKER_COMMAND_H
 #include <string>
-#include <iostream>
+#include <ostream>
 
-#include "LIEF/types.hpp"
 #include "LIEF/visibility.h"
 
 #include "LIEF/MachO/LoadCommand.hpp"
-
 
 namespace LIEF {
 namespace MachO {
@@ -31,33 +29,41 @@ namespace details {
 struct dylinker_command;
 }
 
-//! Class that represents the Mach-O linker, also named loader
-//! Most of the time, DylinkerCommand::name() returns ``/usr/lib/dyld``
+//! Class that represents the Mach-O linker, also named loader.
+//! Most of the time, DylinkerCommand::name() should return ``/usr/lib/dyld``
 class LIEF_API DylinkerCommand : public LoadCommand {
   public:
-  DylinkerCommand();
+  DylinkerCommand() = default;
   DylinkerCommand(const details::dylinker_command& cmd);
+  DylinkerCommand(std::string name);
 
-  DylinkerCommand& operator=(const DylinkerCommand& copy);
-  DylinkerCommand(const DylinkerCommand& copy);
+  DylinkerCommand& operator=(const DylinkerCommand& copy) = default;
+  DylinkerCommand(const DylinkerCommand& copy) = default;
 
-  DylinkerCommand* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<DylinkerCommand>(new DylinkerCommand(*this));
+  }
 
-  virtual ~DylinkerCommand();
+  ~DylinkerCommand() override = default;
 
   std::ostream& print(std::ostream& os) const override;
 
   //! Path to the linker (or loader)
-  const std::string& name() const;
+  const std::string& name() const {
+    return name_;
+  }
 
-  void name(const std::string& name);
-
-  bool operator==(const DylinkerCommand& rhs) const;
-  bool operator!=(const DylinkerCommand& rhs) const;
+  void name(std::string name) {
+    name_ = std::move(name);
+  }
 
   void accept(Visitor& visitor) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    const LoadCommand::TYPE type = cmd->command();
+    return type == LoadCommand::TYPE::ID_DYLINKER ||
+           type == LoadCommand::TYPE::LOAD_DYLINKER;
+  }
 
   private:
   std::string name_;

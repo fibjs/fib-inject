@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 #ifndef LIEF_MACHO_RELOCATION_FIXUP_H
 #define LIEF_MACHO_RELOCATION_FIXUP_H
-#include <iostream>
+#include <ostream>
 #include <memory>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/MachO/Relocation.hpp"
+#include "LIEF/MachO/DyldChainedFormat.hpp"
 
 namespace LIEF {
 namespace MachO {
@@ -36,7 +36,7 @@ struct dyld_chained_ptr_32_rebase;
 class BinaryParser;
 class Builder;
 
-//! Class that represents a rebase relocation found in the LC_DYLD_CHAINED_FIXUPS command.
+//! Class that represents a rebase relocation found in the `LC_DYLD_CHAINED_FIXUPS` command.
 //!
 //! This class extends LIEF::Relocation in which LIEF::Relocation::address is set to
 //! the absolute virtual address where the relocation must take place (e.g. `0x10000d270`).
@@ -58,53 +58,62 @@ class LIEF_API RelocationFixup : public Relocation {
   RelocationFixup& operator=(const RelocationFixup&);
   RelocationFixup(const RelocationFixup&);
 
-  RelocationFixup& operator=(RelocationFixup&&);
-  RelocationFixup(RelocationFixup&&);
+  RelocationFixup& operator=(RelocationFixup&&) noexcept = default;
+  RelocationFixup(RelocationFixup&&) noexcept = default;
 
   ~RelocationFixup() override;
 
-  Relocation* clone() const override;
+  std::unique_ptr<Relocation> clone() const override {
+    return std::unique_ptr<RelocationFixup>(new RelocationFixup(*this));
+  }
 
   //! Not relevant for this kind of relocation
-  bool is_pc_relative() const override;
+  bool is_pc_relative() const override {
+    return false;
+  }
 
   //! Origin of the relocation. For this concrete object, it
-  //! should be RELOCATION_ORIGINS::ORIGIN_CHAINED_FIXUPS
-  RELOCATION_ORIGINS origin() const override;
+  //! should be Relocation::ORIGIN::CHAINED_FIXUPS
+  ORIGIN origin() const override {
+    return ORIGIN::CHAINED_FIXUPS;
+  }
 
-  inline DYLD_CHAINED_PTR_FORMAT ptr_format() const {
+  DYLD_CHAINED_PTR_FORMAT ptr_format() const {
     return ptr_fmt_;
   }
 
-  //! The value that should be set at LIEF::Relocation::address
-  //! if the imagebase is LIEF::Binary::imagebase. Otherwise, it should
-  //! be: target() - LIEF::Binary::imagebase() + new_imagebase
+  //! The value that should be set at the address pointed by LIEF::Relocation::address
+  //! if the imagebase chosen by the loader is LIEF::Binary::imagebase.
+  //! Otherwise: target() - LIEF::Binary::imagebase() + new_imagebase.
   uint64_t target() const;
   void target(uint64_t target);
 
   //! Not relevant for this kind of relocation
-  void pc_relative(bool) override;
+  void pc_relative(bool) override {}
 
-  inline uint32_t offset() const {
+  uint32_t offset() const {
     return offset_;
   }
 
-  inline void offset(uint32_t offset) {
+  void offset(uint32_t offset) {
     offset_ = offset;
   }
 
   //! The address of this relocation is bound to its offset.
-  uint64_t address() const override;
+  uint64_t address() const override {
+    return imagebase_ + offset_;
+  }
 
   //! Changing the address means changing the offset
-  void address(uint64_t address) override;
-
-  bool operator==(const RelocationFixup& rhs) const;
-  bool operator!=(const RelocationFixup& rhs) const;
+  void address(uint64_t address) override {
+    offset_ = address - imagebase_;
+  }
 
   void accept(Visitor& visitor) const override;
 
-  static bool classof(const Relocation& r);
+  static bool classof(const Relocation& r) {
+    return r.origin() == Relocation::ORIGIN::CHAINED_FIXUPS;
+  }
 
   std::ostream& print(std::ostream& os) const override;
 
@@ -123,7 +132,7 @@ class LIEF_API RelocationFixup : public Relocation {
   void set(const details::dyld_chained_ptr_64_rebase& fixup);
   void set(const details::dyld_chained_ptr_32_rebase& fixup);
 
-  DYLD_CHAINED_PTR_FORMAT ptr_fmt_;
+  DYLD_CHAINED_PTR_FORMAT ptr_fmt_ = DYLD_CHAINED_PTR_FORMAT::PTR_32;
   uint64_t imagebase_ = 0;
   uint32_t offset_ = 0;
 

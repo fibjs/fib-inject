@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_SUB_FRAMEWORK_H_
-#define LIEF_MACHO_SUB_FRAMEWORK_H_
+#ifndef LIEF_MACHO_SUB_FRAMEWORK_H
+#define LIEF_MACHO_SUB_FRAMEWORK_H
 #include <string>
-#include <iostream>
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/MachO/LoadCommand.hpp"
 
@@ -47,28 +46,33 @@ struct sub_framework_command;
 class LIEF_API SubFramework : public LoadCommand {
   friend class BinaryParser;
   public:
-  SubFramework();
+  SubFramework() = default;
   SubFramework(const details::sub_framework_command& cmd);
 
-  SubFramework& operator=(const SubFramework& copy);
-  SubFramework(const SubFramework& copy);
+  SubFramework& operator=(const SubFramework& copy) = default;
+  SubFramework(const SubFramework& copy) = default;
 
-  SubFramework* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<SubFramework>(new SubFramework(*this));
+  }
 
   //! Name of the umbrella framework
-  const std::string& umbrella() const;
-  void umbrella(const std::string& u);
+  const std::string& umbrella() const {
+    return umbrella_;
+  }
+  void umbrella(std::string u) {
+    umbrella_ = std::move(u);
+  }
 
-  virtual ~SubFramework();
-
-  bool operator==(const SubFramework& rhs) const;
-  bool operator!=(const SubFramework& rhs) const;
+  ~SubFramework() override = default;
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::SUB_FRAMEWORK;
+  }
 
   private:
   std::string umbrella_;

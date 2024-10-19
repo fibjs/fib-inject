@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iomanip>
-#include <memory>
-
 #include "logging.hpp"
 #include "LIEF/errors.hpp"
-#include "LIEF/MachO/hash.hpp"
 
 #include "LIEF/MachO/CodeSignature.hpp"
 #include "LIEF/MachO/CodeSignatureDir.hpp"
@@ -32,6 +28,7 @@
 #include "LIEF/MachO/SegmentSplitInfo.hpp"
 #include "LIEF/MachO/SymbolCommand.hpp"
 #include "LIEF/MachO/TwoLevelHints.hpp"
+#include "LIEF/MachO/SegmentCommand.hpp"
 
 namespace LIEF {
 namespace MachO {
@@ -103,35 +100,18 @@ inline ok_error_t update_span(span<uint8_t>& sp, uintptr_t original_data_addr, u
   return ok();
 }
 
-LinkEdit::~LinkEdit() = default;
-
 LinkEdit& LinkEdit::operator=(LinkEdit other) {
   swap(other);
   return *this;
 }
 
-LinkEdit::LinkEdit(const LinkEdit&) = default;
-
-void LinkEdit::swap(LinkEdit& other) {
+void LinkEdit::swap(LinkEdit& other) noexcept {
   SegmentCommand::swap(other);
   std::swap(dyld_,           other.dyld_);
   std::swap(chained_fixups_, other.chained_fixups_);
 }
 
-SegmentCommand* LinkEdit::clone() const {
-  return new LinkEdit(*this);
-}
-
-bool LinkEdit::classof(const LoadCommand* cmd) {
-  return SegmentCommand::classof(cmd);
-}
-
-bool LinkEdit::segmentof(const SegmentCommand& segment) {
-  return segment.name() == "__LINKEDIT";
-}
-
-
-void LinkEdit::update_data(update_fnc_t f) {
+void LinkEdit::update_data(const update_fnc_t& f) {
   const auto original_data_addr     = reinterpret_cast<uintptr_t>(data_.data());
   const auto original_data_size     = static_cast<size_t>(data_.size());
   const uintptr_t original_data_end = original_data_addr + original_data_size;
@@ -218,7 +198,7 @@ void LinkEdit::update_data(update_fnc_t f) {
   }
 }
 
-void LinkEdit::update_data(update_fnc_ws_t f, size_t where, size_t size) {
+void LinkEdit::update_data(const update_fnc_ws_t& f, size_t where, size_t size) {
   const auto original_data_addr     = reinterpret_cast<uintptr_t>(data_.data());
   const auto original_data_size     = static_cast<size_t>(data_.size());
   const uintptr_t original_data_end = original_data_addr + original_data_size;
@@ -304,7 +284,6 @@ void LinkEdit::update_data(update_fnc_ws_t f, size_t where, size_t size) {
     }
   }
 }
-
 
 }
 }

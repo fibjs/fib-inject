@@ -6,14 +6,12 @@ Parser
 
 .. autofunction:: lief.PE.parse
 
+.. autoclass:: lief.PE.ParserConfig
 
 Binary
 ******
 
 .. autoclass:: lief.PE.Binary
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -21,9 +19,6 @@ Dos Header
 **********
 
 .. autoclass:: lief.PE.DosHeader
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -31,9 +26,6 @@ Header
 *******
 
 .. autoclass:: lief.PE.Header
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -41,9 +33,6 @@ Optional Header
 ***************
 
 .. autoclass:: lief.PE.OptionalHeader
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -51,30 +40,24 @@ Data Directory
 **************
 
 .. autoclass:: lief.PE.DataDirectory
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Section
 *******
 
+.. lief-inheritance:: lief._lief.PE.Section
+  :top-classes: lief._lief.Section
+  :parts: 2
+
 .. autoclass:: lief.PE.Section
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Import
 *******
 
 .. autoclass:: lief.PE.Import
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -82,10 +65,11 @@ Import
 Import Entry
 ************
 
+.. lief-inheritance:: lief._lief.PE.ImportEntry
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.PE.ImportEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -93,20 +77,17 @@ Delay Import
 ************
 
 .. autoclass:: lief.PE.DelayImport
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Delay Import Entry
 ******************
 
+.. lief-inheritance:: lief._lief.PE.DelayImportEntry
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.PE.DelayImportEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -114,19 +95,17 @@ TLS
 ***
 
 .. autoclass:: lief.PE.TLS
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Symbol
 *******
 
+.. lief-inheritance:: lief._lief.PE.Symbol
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.PE.Symbol
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -134,9 +113,6 @@ Relocation
 **********
 
 .. autoclass:: lief.PE.Relocation
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -144,11 +120,11 @@ Relocation
 Relocation Entry
 ****************
 
-.. autoclass:: lief.PE.RelocationEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. lief-inheritance:: lief._lief.PE.RelocationEntry
+  :top-classes: lief._lief.Relocation
+  :parts: 2
 
+.. autoclass:: lief.PE.RelocationEntry
 
 ----------
 
@@ -156,20 +132,17 @@ Export
 ******
 
 .. autoclass:: lief.PE.Export
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
 Export Entry
 ************
 
+.. lief-inheritance:: lief._lief.PE.ExportEntry
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.PE.ExportEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -177,121 +150,147 @@ Signature
 *********
 
 .. autoclass:: lief.PE.Signature
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature Attribute
 *******************
 
+.. lief-inheritance:: lief._lief.PE.Attribute
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.Attribute
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Signature ContentType
 *********************
 
+.. lief-inheritance:: lief._lief.PE.ContentType
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.ContentType
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature GenericType
 *********************
 
+.. lief-inheritance:: lief._lief.PE.GenericType
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.GenericType
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature MsSpcNestedSignature
 ******************************
 
+.. lief-inheritance:: lief._lief.PE.MsSpcNestedSignature
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.MsSpcNestedSignature
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature MsSpcStatementType
 ****************************
 
+.. lief-inheritance:: lief._lief.PE.MsSpcStatementType
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.MsSpcStatementType
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature PKCS9AtSequenceNumber
 *******************************
 
+.. lief-inheritance:: lief._lief.PE.PKCS9AtSequenceNumber
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.PKCS9AtSequenceNumber
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature PKCS9CounterSignature
 *******************************
 
+.. lief-inheritance:: lief._lief.PE.PKCS9CounterSignature
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.PKCS9CounterSignature
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature PKCS9MessageDigest
 ****************************
 
+.. lief-inheritance:: lief._lief.PE.PKCS9MessageDigest
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.PKCS9MessageDigest
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature PKCS9SigningTime
 **************************
 
+.. lief-inheritance:: lief._lief.PE.PKCS9SigningTime
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.PKCS9SigningTime
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Signature SpcSpOpusInfo
 ***********************
 
+.. lief-inheritance:: lief._lief.PE.SpcSpOpusInfo
+  :top-classes: lief._lief.PE.Attribute
+  :parts: 2
+
 .. autoclass:: lief.PE.SpcSpOpusInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
+Signature SpcIndirectData
+*************************
+
+.. lief-inheritance:: lief._lief.PE.SpcIndirectData
+  :top-classes: lief._lief.PE.ContentInfo.Content
+  :parts: 2
+
+
+.. autoclass:: lief.PE.SpcIndirectData
+
+----------
+
+GenericContent
+**************
+
+.. lief-inheritance:: lief._lief.PE.GenericContent
+  :top-classes: lief._lief.PE.ContentInfo.Content
+  :parts: 2
+
+
+.. autoclass:: lief.PE.GenericContent
+
+----------
 
 RsaInfo
 *******
 
 .. autoclass:: lief.PE.RsaInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -299,20 +298,17 @@ x509
 ****
 
 .. autoclass:: lief.PE.x509
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 ContentInfo
 ***********
 
-.. autoclass:: lief.PE.ContentInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. lief-inheritance:: lief._lief.PE.ContentInfo.Content
+  :top-classes: lief._lief.PE.ContentInfo.Content
+  :parts: 2
 
+.. autoclass:: lief.PE.ContentInfo
 
 ----------
 
@@ -321,10 +317,43 @@ SignerInfo
 **********
 
 .. autoclass:: lief.PE.SignerInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
+----------
+
+MsCounterSign
+*************
+
+.. autoclass:: lief.PE.MsCounterSign
+
+----------
+
+
+PKCS9TSTInfo
+************
+
+.. autoclass:: lief.PE.PKCS9TSTInfo
+
+----------
+
+
+MsManifestBinaryID
+******************
+
+.. autoclass:: lief.PE.MsManifestBinaryID
+
+----------
+
+SpcRelaxedPeMarkerCheck
+***********************
+
+.. autoclass:: lief.PE.SpcRelaxedPeMarkerCheck
+
+----------
+
+SigningCertificateV2
+********************
+
+.. autoclass:: lief.PE.SigningCertificateV2
 
 ----------
 
@@ -333,35 +362,28 @@ Builder
 *******
 
 .. autoclass:: lief.PE.Builder
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
-
 
 Resource Node
 *************
 
-.. autoclass:: lief.PE.ResourceNode
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. lief-inheritance:: lief._lief.PE.ResourceNode
+  :top-classes: lief._lief.PE.ResourceNode
+  :parts: 2
 
+.. autoclass:: lief.PE.ResourceNode
 
 ----------
-
-
 
 Resource Directory
 ******************
 
-.. autoclass:: lief.PE.ResourceDirectory
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. lief-inheritance:: lief._lief.PE.ResourceDirectory
+  :top-classes: lief._lief.PE.ResourceNode
+  :parts: 2
 
+.. autoclass:: lief.PE.ResourceDirectory
 
 ----------
 
@@ -369,23 +391,18 @@ Resource Directory
 Resource Data
 *************
 
-.. autoclass:: lief.PE.ResourceData
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. lief-inheritance:: lief._lief.PE.ResourceData
+  :top-classes: lief._lief.PE.ResourceNode
+  :parts: 2
 
+.. autoclass:: lief.PE.ResourceData
 
 ----------
-
 
 Resources Manager
 *****************
 
 .. autoclass:: lief.PE.ResourcesManager
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
@@ -393,22 +410,13 @@ Resource Icon
 *************
 
 .. autoclass:: lief.PE.ResourceIcon
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
-
 
 Resource Dialog
 ***************
 
 .. autoclass:: lief.PE.ResourceDialog
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
@@ -416,21 +424,13 @@ Resource Dialog Item
 *********************
 
 .. autoclass:: lief.PE.ResourceDialogItem
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
-
 
 Resource Version
 ****************
 
 .. autoclass:: lief.PE.ResourceVersion
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -438,9 +438,6 @@ Resource Fixed File Info
 ************************
 
 .. autoclass:: lief.PE.ResourceFixedFileInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -448,9 +445,6 @@ Resource Var File Info
 **********************
 
 .. autoclass:: lief.PE.ResourceVarFileInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -458,9 +452,6 @@ Resource String File Info
 *************************
 
 .. autoclass:: lief.PE.ResourceStringFileInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -468,9 +459,6 @@ Lang code item
 **************
 
 .. autoclass:: lief.PE.LangCodeItem
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -478,9 +466,6 @@ Resource String Table
 *********************
 
 .. autoclass:: lief.PE.ResourceStringTable
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -488,9 +473,6 @@ Rich Header
 ***********
 
 .. autoclass:: lief.PE.RichHeader
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -498,19 +480,17 @@ Rich Entry
 **********
 
 .. autoclass:: lief.PE.RichEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Debug
 *****
 
+.. lief-inheritance:: lief._lief.PE.Debug
+  :top-classes: lief._lief.PE.Debug
+  :parts: 2
+
 .. autoclass:: lief.PE.Debug
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -518,21 +498,22 @@ Debug
 Code View
 *********
 
+.. lief-inheritance:: lief._lief.PE.CodeView
+  :top-classes: lief._lief.PE.Debug
+  :parts: 2
+
 .. autoclass:: lief.PE.CodeView
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Code View PDB
 **************
 
+.. lief-inheritance:: lief._lief.PE.CodeViewPDB
+  :top-classes: lief._lief.PE.Debug
+  :parts: 2
+
 .. autoclass:: lief.PE.CodeViewPDB
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -540,123 +521,125 @@ Code Integrity
 **************
 
 .. autoclass:: lief.PE.CodeIntegrity
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Pogo
 ****
 
+.. lief-inheritance:: lief._lief.PE.Pogo
+  :top-classes: lief._lief.PE.Debug
+  :parts: 2
+
 .. autoclass:: lief.PE.Pogo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 Pogo Entry
 **********
 
 .. autoclass:: lief.PE.PogoEntry
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
+Repro
+*****
+
+.. lief-inheritance:: lief._lief.PE.Repro
+  :top-classes: lief._lief.PE.Debug
+  :parts: 2
+
+.. autoclass:: lief.PE.Repro
+
+----------
 
 Load Configuration
 ******************
 
 .. autoclass:: lief.PE.LoadConfiguration
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 Load Configuration V0
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV0
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V1
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV1
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V2
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV2
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V3
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV3
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V4
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV4
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V5
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV5
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V6
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV6
-  :members:
   :show-inheritance:
-  :undoc-members:
 
 Load Configuration V7
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.LoadConfigurationV7
-  :members:
   :show-inheritance:
-  :undoc-members:
 
+Load Configuration V8
+~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: lief.PE.LoadConfigurationV8
+  :show-inheritance:
+
+Load Configuration V9
+~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: lief.PE.LoadConfigurationV9
+  :show-inheritance:
+
+Load Configuration V10
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: lief.PE.LoadConfigurationV10
+  :show-inheritance:
+
+Load Configuration V11
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: lief.PE.LoadConfigurationV11
+  :show-inheritance:
 
 Utilities
 *********
 
-
-.. autofunction:: lief.PE.is_pe
+.. autofunction:: lief.is_pe
 
 .. autofunction:: lief.PE.get_type
 
 .. autofunction:: lief.PE.get_imphash
 
 .. autoclass:: lief.PE.IMPHASH_MODE
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 .. autofunction:: lief.PE.resolve_ordinals
 
@@ -669,69 +652,6 @@ PE_TYPE
 ~~~~~~~
 
 .. autoclass:: lief.PE.PE_TYPE
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-MACHINE_TYPES
-~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.MACHINE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-HEADER_CHARACTERISTICS
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.HEADER_CHARACTERISTICS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-SUBSYSTEM
-~~~~~~~~~
-
-.. autoclass:: lief.PE.SUBSYSTEM
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-DATA_DIRECTORY
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.DATA_DIRECTORY
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-DLL_CHARACTERISTICS
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.DLL_CHARACTERISTICS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-SECTION_CHARACTERISTICS
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.SECTION_CHARACTERISTICS
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -739,9 +659,6 @@ SECTION_TYPES
 ~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.SECTION_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -749,9 +666,6 @@ SYMBOL_BASE_TYPES
 ~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.SYMBOL_BASE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -759,9 +673,6 @@ SYMBOL_COMPLEX_TYPES
 ~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.SYMBOL_COMPLEX_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -769,9 +680,6 @@ SYMBOL_SECTION_NUMBER
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.SYMBOL_SECTION_NUMBER
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -779,59 +687,6 @@ SYMBOL_STORAGE_CLASS
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.SYMBOL_STORAGE_CLASS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-RELOCATIONS_BASE_TYPES
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.RELOCATIONS_BASE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-DEBUG_TYPES
-~~~~~~~~~~~
-
-.. autoclass:: lief.PE.DEBUG_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-RESOURCE_TYPES
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.RESOURCE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-RESOURCE_LANGS
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.RESOURCE_LANGS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-RESOURCE_SUBLANGS
-~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.RESOURCE_SUBLANGS
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -839,9 +694,6 @@ FIXED_VERSION_FILE_SUB_TYPES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.CODE_PAGES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -849,10 +701,6 @@ WINDOW_STYLES
 ~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.WINDOW_STYLES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
@@ -860,10 +708,6 @@ EXTENDED_WINDOW_STYLES
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.EXTENDED_WINDOW_STYLES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
@@ -871,10 +715,6 @@ DIALOG_BOX_STYLES
 ~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.DIALOG_BOX_STYLES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
@@ -882,20 +722,13 @@ FIXED_VERSION_OS
 ~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.FIXED_VERSION_OS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
 
 FIXED_VERSION_FILE_FLAGS
 ~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: lief.PE.FIXED_VERSION_FILE_FLAGS
-  :members:
-  :inherited-members:
-  :undoc-members:
 
+.. autoclass:: lief.PE.FIXED_VERSION_FILE_FLAGS
 
 ----------
 
@@ -903,77 +736,24 @@ FIXED_VERSION_FILE_TYPES
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.FIXED_VERSION_FILE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
+
+RESOURCE_LANGS
+~~~~~~~~~~~~~~
+
+.. autoclass:: lief.PE.RESOURCE_LANGS
+
+-----------
 
 FIXED_VERSION_FILE_SUB_TYPES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.PE.FIXED_VERSION_FILE_SUB_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ----------
-
-WIN_VERSION
-~~~~~~~~~~~
-
-.. autoclass:: lief.PE.WIN_VERSION
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-GUARD_CF_FLAGS
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.GUARD_CF_FLAGS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-CODE_VIEW_SIGNATURES
-~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.CODE_VIEW_SIGNATURES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-POGO_SIGNATURES
-~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.POGO_SIGNATURES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
 
 ALGORITHMS
 ~~~~~~~~~~
 
 .. autoclass:: lief.PE.ALGORITHMS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-SIG_ATTRIBUTE_TYPES
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.PE.SIG_ATTRIBUTE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:

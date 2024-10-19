@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,17 @@
  */
 #include <fstream>
 #include <climits>
+#include "LIEF/BinaryStream/SpanStream.hpp"
 #include "logging.hpp"
 #include "LIEF/DEX/File.hpp"
+#include "LIEF/DEX/utils.hpp"
 #include "LIEF/DEX/instructions.hpp"
 #include "LIEF/DEX/Class.hpp"
 #include "LIEF/DEX/Method.hpp"
 #include "LIEF/DEX/Prototype.hpp"
 #include "LIEF/DEX/hash.hpp"
+#include "LIEF/DEX/Type.hpp"
+#include "LIEF/DEX/Field.hpp"
 #include "DEX/Structures.hpp"
 
 #if defined(LIEF_JSON_SUPPORT)
@@ -38,8 +42,9 @@ File::~File() = default;
 
 dex_version_t File::version() const {
   Header::magic_t m = header().magic();
-  const auto* version = reinterpret_cast<const char*>(m.data() + sizeof(details::magic));
-  return static_cast<dex_version_t>(std::stoul(version));
+  span<const uint8_t> data(m.data(), m.size());
+  SpanStream stream(data);
+  return DEX::version(stream);
 }
 
 std::string File::save(const std::string& path, bool deoptimize) const {
@@ -524,39 +529,28 @@ void File::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool File::operator==(const File& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool File::operator!=(const File& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const File& file) {
   os << "DEX File " << file.name() << " Version: " << std::dec << file.version();
   if (!file.location().empty()) {
     os << " - " << file.location();
   }
-  os << std::endl;
+  os << '\n';
 
-  os << "Header" << std::endl;
-  os << "======" << std::endl;
+  os << "Header" << '\n';
+  os << "======" << '\n';
 
   os << file.header();
 
-  os << std::endl;
+  os << '\n';
 
-  os << "Map" << std::endl;
-  os << "===" << std::endl;
+  os << "Map" << '\n';
+  os << "===" << '\n';
 
   os << file.map();
 
-  os << std::endl;
+  os << '\n';
   return os;
 }
 

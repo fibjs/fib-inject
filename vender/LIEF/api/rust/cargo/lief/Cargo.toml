@@ -1,0 +1,24 @@
+[package]
+name                  = "lief"
+description           = "Official Rust bindings for LIEF"
+edition               = "2021"
+documentation         = "https://lief.re/doc/stable/rust/lief/"
+version.workspace     = true
+authors.workspace     = true
+license.workspace     = true
+readme.workspace      = true
+homepage.workspace    = true
+keywords.workspace    = true
+repository.workspace  = true
+categories.workspace  = true
+
+[lib]
+doctest = false
+
+[dependencies]
+cxx        = "1.0.109"
+bitflags   = "2.4"
+num-traits = "0.2"
+num-derive = "0.4"
+num-bigint = "0.4"
+lief-ffi   = { version = "0.15.1", path = "../lief-ffi" }

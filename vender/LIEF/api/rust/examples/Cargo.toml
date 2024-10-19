@@ -1,0 +1,37 @@
+[package]
+name    = "lief-examples"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+lief = { path = "../cargo/lief" }
+
+[[bin]]
+name = "reader"
+
+[[bin]]
+name = "pe_check_authenticode"
+
+[[bin]]
+name = "pe_rich_header"
+
+[[bin]]
+name = "elf_deps"
+
+[[bin]]
+name = "pe_deps"
+
+[[bin]]
+name = "list_macho_encryption"
+
+[[bin]]
+name = "dwarf_inspect"
+
+[[bin]]
+name = "pdb_inspect"
+
+[[bin]]
+name = "objc_inspect"
+
+[[bin]]
+name = "test_run_examples"

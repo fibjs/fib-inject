@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ namespace LIEF {
 namespace ELF {
 
 void init_c_dynamic_symbols(Elf_Binary_t* c_binary, Binary* binary);
-void init_c_static_symbols(Elf_Binary_t* c_binary, Binary* binary);
+void init_c_symtab_symbols(Elf_Binary_t* c_binary, Binary* binary);
 
 void destroy_dynamic_symbols(Elf_Binary_t* c_binary);
-void destroy_static_symbols(Elf_Binary_t* c_binary);
+void destroy_symtab_symbols(Elf_Binary_t* c_binary);
 
 }
 }

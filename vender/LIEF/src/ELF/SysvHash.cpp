@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,48 +23,10 @@
 
 namespace LIEF {
 namespace ELF {
-SysvHash& SysvHash::operator=(const SysvHash&) = default;
-SysvHash::SysvHash(const SysvHash&)            = default;
-SysvHash::~SysvHash()                          = default;
-SysvHash::SysvHash()                           = default;
-SysvHash& SysvHash::operator=(SysvHash&&)      = default;
-SysvHash::SysvHash(SysvHash&&)                 = default;
-
-
-uint32_t SysvHash::nbucket() const {
-  return static_cast<uint32_t>(buckets_.size());
-}
-
-uint32_t SysvHash::nchain() const {
-  return static_cast<uint32_t>(chains_.size());
-}
-
-const std::vector<uint32_t>& SysvHash::buckets() const {
-  return buckets_;
-}
-
-const std::vector<uint32_t>& SysvHash::chains() const {
-  return chains_;
-}
-
-bool SysvHash::operator==(const SysvHash& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool SysvHash::operator!=(const SysvHash& rhs) const {
-  return !(*this == rhs);
-}
-
 
 void SysvHash::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
-
 
 std::ostream& operator<<(std::ostream& os, const SysvHash& sysvhash) {
   os << std::hex << std::left;
@@ -99,11 +61,11 @@ std::ostream& operator<<(std::ostream& os, const SysvHash& sysvhash) {
 
 
 
-  os << std::setw(33) << std::setfill(' ') << "Number of buckets:"  << sysvhash.nbucket() << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Buckets:"            << buckets_str        << std::endl;
+  os << std::setw(33) << std::setfill(' ') << "Number of buckets:"  << sysvhash.nbucket() << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Buckets:"            << buckets_str        << '\n';
 
-  os << std::setw(33) << std::setfill(' ') << "Number of chains:"   << sysvhash.nchain() << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Chains:"             << chains_str        << std::endl;
+  os << std::setw(33) << std::setfill(' ') << "Number of chains:"   << sysvhash.nchain() << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Chains:"             << chains_str        << '\n';
 
   return os;
 

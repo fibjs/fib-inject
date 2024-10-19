@@ -45,10 +45,8 @@ Napi::Value inject_into_macho(const Napi::CallbackInfo& info)
 
         if (!segment) {
             LIEF::MachO::SegmentCommand new_segment(segment_name);
-            // new_segment.max_protection(static_cast<uint32_t>(LIEF::MachO::SegmentCommand::VM_PROTECTIONS::READ));
-            // new_segment.init_protection(static_cast<uint32_t>(LIEF::MachO::SegmentCommand::VM_PROTECTIONS::READ));
-            new_segment.max_protection(static_cast<uint32_t>(LIEF::MachO::VM_PROTECTIONS::VM_PROT_READ));
-            new_segment.init_protection(static_cast<uint32_t>(LIEF::MachO::VM_PROTECTIONS::VM_PROT_READ));
+            new_segment.max_protection(static_cast<uint32_t>(LIEF::MachO::SegmentCommand::VM_PROTECTIONS::READ));
+            new_segment.init_protection(static_cast<uint32_t>(LIEF::MachO::SegmentCommand::VM_PROTECTIONS::READ));
             new_segment.add_section(section);
             binary.add(new_segment);
         } else {

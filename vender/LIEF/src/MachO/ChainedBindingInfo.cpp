@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <numeric>
-#include <iomanip>
-
-#include "logging.hpp"
-#include "LIEF/MachO/hash.hpp"
+#include "LIEF/Visitor.hpp"
 #include "LIEF/MachO/ChainedBindingInfo.hpp"
 #include "MachO/ChainedFixup.hpp"
 
 namespace LIEF {
 namespace MachO {
 
-ChainedBindingInfo::ChainedBindingInfo(ChainedBindingInfo&&) = default;
-ChainedBindingInfo& ChainedBindingInfo::operator=(ChainedBindingInfo&&) = default;
+ChainedBindingInfo::ChainedBindingInfo(ChainedBindingInfo&&) noexcept = default;
 ChainedBindingInfo::ChainedBindingInfo(const ChainedBindingInfo& other) :
   BindingInfo(other),
   format_{other.format_},
@@ -45,10 +40,6 @@ ChainedBindingInfo::ChainedBindingInfo(const ChainedBindingInfo& other) :
   }
 }
 
-ChainedBindingInfo::~ChainedBindingInfo() {
-  clear();
-}
-
 ChainedBindingInfo::ChainedBindingInfo(DYLD_CHAINED_FORMAT fmt, bool is_weak) :
   format_{fmt}
 {
@@ -60,7 +51,7 @@ ChainedBindingInfo& ChainedBindingInfo::operator=(ChainedBindingInfo other) {
   return *this;
 }
 
-void ChainedBindingInfo::swap(ChainedBindingInfo& other) {
+void ChainedBindingInfo::swap(ChainedBindingInfo& other) noexcept {
   BindingInfo::swap(other);
   std::swap(format_,          other.format_);
   std::swap(ptr_format_,      other.ptr_format_);
@@ -71,34 +62,6 @@ void ChainedBindingInfo::swap(ChainedBindingInfo& other) {
 void ChainedBindingInfo::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
-
-bool ChainedBindingInfo::operator==(const ChainedBindingInfo& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool ChainedBindingInfo::operator!=(const ChainedBindingInfo& rhs) const {
-  return !(*this == rhs);
-}
-
-bool ChainedBindingInfo::classof(const BindingInfo& info) {
-  return info.type() == BindingInfo::TYPES::CHAINED;
-}
-
-
-uint64_t ChainedBindingInfo::address() const {
-  return /* imagebase */ address_ + offset_;
-}
-
-void ChainedBindingInfo::address(uint64_t address) {
-  offset_ = address - /* imagebase */ address_;
-}
-
 
 uint64_t ChainedBindingInfo::sign_extended_addend() const {
   switch (btypes_) {
@@ -163,12 +126,6 @@ void ChainedBindingInfo::clear() {
   }
   btypes_ = BIND_TYPES::UNKNOWN;
 }
-
-std::ostream& operator<<(std::ostream& os, const ChainedBindingInfo& info) {
-  os << static_cast<const BindingInfo&>(info);
-  return os;
-}
-
 
 }
 }

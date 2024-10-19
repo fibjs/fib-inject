@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@
 #include "LIEF/MachO/LinkEdit.hpp"
 #include "LIEF/MachO/LinkerOptHint.hpp"
 #include "LIEF/MachO/MainCommand.hpp"
+#include "LIEF/MachO/RPathCommand.hpp"
 #include "LIEF/MachO/RelocationFixup.hpp"
 #include "LIEF/MachO/Section.hpp"
 #include "LIEF/MachO/SegmentCommand.hpp"
@@ -50,6 +51,7 @@
 #include "MachO/Structures.hpp"
 #include "MachO/exports_trie.hpp"
 #include "MachO/ChainedFixup.hpp"
+#include "MachO/ChainedBindingInfoList.hpp"
 
 #include "internal_utils.hpp"
 
@@ -172,7 +174,7 @@ ok_error_t Builder::build_segments() {
       const Section& section = sections[i];
       const std::string& sec_name = section.name();
       const std::string& segment_name = segment.name();
-      LIEF_DEBUG("{}", section);
+      LIEF_DEBUG("{}", to_string(section));
       section_t header;
       std::memset(&header, 0, sizeof(header));
 
@@ -193,7 +195,8 @@ ok_error_t Builder::build_segments() {
       header.flags     = static_cast<uint32_t>(section.raw_flags());
       header.reserved1 = static_cast<uint32_t>(section.reserved1());
       header.reserved2 = static_cast<uint32_t>(section.reserved2());
-      if (std::is_same<section_t, details::section_64>::value) { // TODO: Move to if constexpr when LIEF will use C++17
+
+      if constexpr (std::is_same_v<section_t, details::section_64>) {
         reinterpret_cast<details::section_64*>(&header)->reserved3 = static_cast<uint32_t>(section.reserved3());
       }
 
@@ -347,6 +350,47 @@ ok_error_t Builder::build(SourceVersion& source_version) {
 
 
 template<class T>
+ok_error_t Builder::build(RPathCommand& rpath_cmd) {
+  LIEF_DEBUG("Build '{}'", to_string(rpath_cmd.command()));
+
+  const uint32_t raw_size = sizeof(details::rpath_command) + rpath_cmd.path().size() + 1;
+  const uint32_t size_needed = align(raw_size, sizeof(typename T::uint));
+  const uint32_t padding = size_needed - raw_size;
+
+  if (rpath_cmd.original_data_.size() != size_needed ||
+      rpath_cmd.size() != size_needed)
+  {
+    LIEF_WARN("Not enough room left to rebuild {}."
+              "required=0x{:x} available=0x{:x}",
+              rpath_cmd.path(), size_needed, rpath_cmd.original_data_.size());
+  }
+
+
+  details::rpath_command raw_cmd;
+  std::memset(&raw_cmd, 0, sizeof(details::rpath_command));
+
+  raw_cmd.cmd     = static_cast<uint32_t>(rpath_cmd.command());
+  raw_cmd.cmdsize = static_cast<uint32_t>(size_needed);
+  raw_cmd.path    = static_cast<uint32_t>(sizeof(details::rpath_command));
+
+  rpath_cmd.size_ = size_needed;
+  rpath_cmd.original_data_.clear();
+
+  // Write Header
+  std::move(reinterpret_cast<uint8_t*>(&raw_cmd),
+            reinterpret_cast<uint8_t*>(&raw_cmd) + sizeof(raw_cmd),
+            std::back_inserter(rpath_cmd.original_data_));
+
+  // Write String
+  const std::string& rpath = rpath_cmd.path();
+  std::move(std::begin(rpath), std::end(rpath),
+            std::back_inserter(rpath_cmd.original_data_));
+  rpath_cmd.original_data_.push_back(0);
+  rpath_cmd.original_data_.insert(std::end(rpath_cmd.original_data_), padding, 0);
+  return ok();
+}
+
+template<class T>
 ok_error_t Builder::build(MainCommand& main_cmd) {
   LIEF_DEBUG("Build '{}'", to_string(main_cmd.command()));
   const uint32_t raw_size = sizeof(details::entry_point_command);
@@ -385,9 +429,7 @@ ok_error_t Builder::build(DyldInfo& dyld_info) {
     LIEF_DEBUG("linkedit_.size(): {:x}", linkedit_.size());
     raw_cmd.rebase_off = linkedit_.size();
     {
-      LIEF_SW_START(sw);
       dyld_info.update_rebase_info(linkedit_);
-      LIEF_SW_END("update_rebase_info(): {}", duration_cast<std::chrono::milliseconds>(sw.elapsed()));
     }
     raw_cmd.rebase_size = linkedit_.size() - raw_cmd.rebase_off;
     if (raw_cmd.rebase_size > 0) {
@@ -401,9 +443,7 @@ ok_error_t Builder::build(DyldInfo& dyld_info) {
                dyld_info.rebase().second, raw_cmd.rebase_size);
   }
   {
-    LIEF_SW_START(sw);
     dyld_info.update_binding_info(linkedit_, raw_cmd);
-    LIEF_SW_END("update_binding_info(): {}", duration_cast<std::chrono::seconds>(sw.elapsed()));
     if (raw_cmd.bind_size > 0) {
       raw_cmd.bind_off += linkedit_offset_;
 
@@ -437,9 +477,7 @@ ok_error_t Builder::build(DyldInfo& dyld_info) {
   {
     raw_cmd.export_off = linkedit_.size();
     {
-      LIEF_SW_START(sw);
       dyld_info.update_export_trie(linkedit_);
-      LIEF_SW_END("update_export_trie(): {}", sw.elapsed());
     }
     raw_cmd.export_size = linkedit_.size() - raw_cmd.export_off;
     if (raw_cmd.export_size > 0) {
@@ -561,14 +599,9 @@ ok_error_t Builder::build(SymbolCommand& symbol_command) {
   std::memset(&symtab, 0, sizeof(details::symtab_command));
   DynamicSymbolCommand* dynsym = binary_->dynamic_symbol_command();
 
-  if (dynsym == nullptr) {
-    LIEF_ERR("Can't rebuild LC_SYMTAB: LC_DYSYMTAB not found");
-    return make_error_code(lief_errors::not_found);
-  }
-
   /* 1. Fille the n_list table */ {
     for (Symbol& s : binary_->symbols()) {
-      if (s.origin() != SYMBOL_ORIGINS::SYM_ORIGIN_LC_SYMTAB) {
+      if (s.origin() != Symbol::ORIGIN::LC_SYMTAB) {
         continue;
       }
       all_syms.push_back(&s);
@@ -610,32 +643,44 @@ ok_error_t Builder::build(SymbolCommand& symbol_command) {
 
     size_t isym = 0;
     /* Local Symbols */ {
-      dynsym->idx_local_symbol(isym);
+      if (dynsym != nullptr) {
+        dynsym->idx_local_symbol(isym);
+      }
       for (Symbol* sym : local_syms) {
         indirect_symbols[sym] = isym;
         write_symbol<T>(nlist_table, *sym, offset_name_map);
         ++isym;
       }
-      dynsym->nb_local_symbols(local_syms.size());
+      if (dynsym != nullptr) {
+        dynsym->nb_local_symbols(local_syms.size());
+      }
     }
 
     /* External Symbols */ {
-      dynsym->idx_external_define_symbol(isym);
+      if (dynsym != nullptr) {
+        dynsym->idx_external_define_symbol(isym);
+      }
       for (Symbol* sym : ext_syms)   {
         indirect_symbols[sym] = isym;
         write_symbol<T>(nlist_table, *sym, offset_name_map);
         ++isym;
       }
-      dynsym->nb_external_define_symbols(ext_syms.size());
+      if (dynsym != nullptr) {
+        dynsym->nb_external_define_symbols(ext_syms.size());
+      }
     }
     /* Undefined Symbols */ {
-      dynsym->idx_undefined_symbol(isym);
+      if (dynsym != nullptr) {
+        dynsym->idx_undefined_symbol(isym);
+      }
       for (Symbol* sym : undef_syms) {
         indirect_symbols[sym] = isym;
         write_symbol<T>(nlist_table, *sym, offset_name_map);
         ++isym;
       }
-      dynsym->nb_undefined_symbols(undef_syms.size());
+      if (dynsym != nullptr) {
+        dynsym->nb_undefined_symbols(undef_syms.size());
+      }
     }
 
     /* The other symbols [...] */ {
@@ -645,7 +690,7 @@ ok_error_t Builder::build(SymbolCommand& symbol_command) {
         ++isym;
       }
     }
-    nlist_table.align(8);
+    nlist_table.align(binary_->is64_ ? 8 : 4);
 
     raw_nlist_table = nlist_table.raw();
     symtab.symoff = linkedit_offset_ + linkedit_.size();
@@ -665,7 +710,7 @@ ok_error_t Builder::build(SymbolCommand& symbol_command) {
   /*
    * Indirect symbol table
    */
-  {
+  if (dynsym != nullptr) {
     LIEF_DEBUG("LC_DYSYMTAB.indirectsymoff: 0x{:06x} -> 0x{:x}",
                dynsym->indirect_symbol_offset(), linkedit_offset_ + linkedit_.size());
     dynsym->indirect_symbol_offset(linkedit_offset_ + linkedit_.size());
@@ -691,7 +736,7 @@ ok_error_t Builder::build(SymbolCommand& symbol_command) {
         LIEF_ERR("Can't find the symbol index");
       }
     }
-    LIEF_DEBUG("LC_SYMTAB.nindirectsyms:    0x{:06x} -> 0x{:x}",
+    LIEF_DEBUG("LC_DYSYMTAB.nindirectsyms:    0x{:06x} -> 0x{:x}",
                dynsym->nb_indirect_symbols(), count);
     dynsym->nb_indirect_symbols(count);
   }
@@ -931,7 +976,7 @@ ok_error_t Builder::build(ThreadCommand& tc) {
   details::thread_command raw_cmd;
   std::memset(&raw_cmd, 0, sizeof(details::thread_command));
 
-  const std::vector<uint8_t>& state = tc.state();
+  const span<const uint8_t> state = tc.state();
 
   const uint32_t raw_size = sizeof(details::thread_command) + state.size();
   const uint32_t size_needed = align(raw_size, sizeof(typename T::uint));
@@ -1049,7 +1094,7 @@ ok_error_t Builder::build(DyldChainedFixups& fixups) {
   header.starts_offset  = align(sizeof(details::dyld_chained_fixups_header), 8);
   header.imports_offset = 0;
   header.symbols_offset = 0;
-  header.imports_count  = fixups.bindings().size();
+  header.imports_count  = fixups.internal_bindings_.size();
   header.imports_format = static_cast<uint32_t>(fixups.imports_format());
   header.symbols_format = 0;
 
@@ -1137,8 +1182,8 @@ ok_error_t Builder::build(DyldChainedFixups& fixups) {
   std::unordered_map<std::string, size_t> offset_name_map;
   string_pool.write<uint8_t>(0);
   size_t offset_counter = string_pool.tellp();
-  std::vector<std::string> string_table_optimized = optimize(fixups.bindings_,
-                                  [] (const std::unique_ptr<ChainedBindingInfo>& bnd) {
+  std::vector<std::string> string_table_optimized = optimize(fixups.internal_bindings_,
+                                  [] (const std::unique_ptr<ChainedBindingInfoList>& bnd) {
                                     if (const Symbol* s = bnd->symbol()) {
                                       return s->name();
                                     }
@@ -1150,19 +1195,20 @@ ok_error_t Builder::build(DyldChainedFixups& fixups) {
   }
 
   const DYLD_CHAINED_FORMAT fmt = fixups.imports_format();
-  const size_t nb_bindings = fixups.bindings().size();
+  const size_t nb_bindings = fixups.internal_bindings_.size();
   switch (fmt) {
     case DYLD_CHAINED_FORMAT::IMPORT:
          imports.reserve(nb_bindings * sizeof(details::dyld_chained_import)); break;
     case DYLD_CHAINED_FORMAT::IMPORT_ADDEND:
          imports.reserve(nb_bindings * sizeof(details::dyld_chained_import_addend)); break;
     case DYLD_CHAINED_FORMAT::IMPORT_ADDEND64:
-         imports.reserve(nb_bindings * sizeof(details::dyld_chained_import)); break;
+         imports.reserve(nb_bindings * sizeof(details::dyld_chained_import_addend64)); break;
   }
 
-  for (const ChainedBindingInfo& info : fixups.bindings()) {
+  for (const std::unique_ptr<ChainedBindingInfoList>& info : fixups.internal_bindings_) {
     uint32_t name_offset = 0;
-    const std::string& name = info.symbol()->name();
+
+    const std::string& name = info->symbol()->name();
     auto it_name_off = offset_name_map.find(name);
 
     if (it_name_off != std::end(offset_name_map)) {
@@ -1175,8 +1221,8 @@ ok_error_t Builder::build(DyldChainedFixups& fixups) {
       case DYLD_CHAINED_FORMAT::IMPORT:
         {
           details::dyld_chained_import import;
-          import.lib_ordinal = info.library_ordinal();
-          import.weak_import = info.is_weak_import();
+          import.lib_ordinal = info->library_ordinal();
+          import.weak_import = info->is_weak_import();
           import.name_offset = name_offset;
           imports.write(import);
           break;
@@ -1184,65 +1230,68 @@ ok_error_t Builder::build(DyldChainedFixups& fixups) {
       case DYLD_CHAINED_FORMAT::IMPORT_ADDEND:
         {
           details::dyld_chained_import_addend import;
-          import.lib_ordinal = info.library_ordinal();
-          import.weak_import = info.is_weak_import();
+          import.lib_ordinal = info->library_ordinal();
+          import.weak_import = info->is_weak_import();
           import.name_offset = name_offset;
-          import.addend      = info.addend();
+          import.addend      = info->addend();
           imports_addend.write(import);
           break;
         }
       case DYLD_CHAINED_FORMAT::IMPORT_ADDEND64:
         {
           details::dyld_chained_import_addend64 import;
-          import.lib_ordinal = info.library_ordinal();
-          import.weak_import = info.is_weak_import();
+          import.lib_ordinal = info->library_ordinal();
+          import.weak_import = info->is_weak_import();
           import.name_offset = name_offset;
-          import.addend      = info.addend();
+          import.addend      = info->addend();
           imports_addend64.write(import);
           break;
         }
     }
-    const uint64_t rel_offset = info.offset_ - info.segment()->file_offset();
-    uint8_t* data_ptr = info.segment_->writable_content().data() + rel_offset;
-    // Rewrite the raw chained binding
-    switch (info.btypes_) {
-      case ChainedBindingInfo::BIND_TYPES::ARM64E_BIND:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
-          raw_bind.bind = *info.arm64_bind_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::ARM64E_AUTH_BIND:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
-          raw_bind.auth_bind = *info.arm64_auth_bind_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::ARM64E_BIND24:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
-          raw_bind.bind24 = *info.arm64_bind24_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::ARM64E_AUTH_BIND24:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
-          raw_bind.auth_bind24 = *info.arm64_auth_bind24_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::PTR64_BIND:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_generic64*>(data_ptr);
-          raw_bind.bind = *info.p64_bind_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::PTR32_BIND:
-        {
-          auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_generic32*>(data_ptr);
-          raw_bind.bind = *info.p32_bind_;
-          break;
-        }
-      case ChainedBindingInfo::BIND_TYPES::UNKNOWN: break;
+
+    for (ChainedBindingInfo* elements : info->elements_) {
+      const uint64_t rel_offset = elements->offset_ - elements->segment()->file_offset();
+      uint8_t* data_ptr = elements->segment_->writable_content().data() + rel_offset;
+      // Rewrite the raw chained binding
+      switch (elements->btypes_) {
+        case ChainedBindingInfo::BIND_TYPES::ARM64E_BIND:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
+            raw_bind.bind = *elements->arm64_bind_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::ARM64E_AUTH_BIND:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
+            raw_bind.auth_bind = *elements->arm64_auth_bind_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::ARM64E_BIND24:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
+            raw_bind.bind24 = *elements->arm64_bind24_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::ARM64E_AUTH_BIND24:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_arm64e*>(data_ptr);
+            raw_bind.auth_bind24 = *elements->arm64_auth_bind24_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::PTR64_BIND:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_generic64*>(data_ptr);
+            raw_bind.bind = *elements->p64_bind_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::PTR32_BIND:
+          {
+            auto& raw_bind = *reinterpret_cast<details::dyld_chained_ptr_generic32*>(data_ptr);
+            raw_bind.bind = *elements->p32_bind_;
+            break;
+          }
+        case ChainedBindingInfo::BIND_TYPES::UNKNOWN: break;
+      }
     }
   }
 
@@ -1477,9 +1526,5 @@ ok_error_t Builder::build(TwoLevelHints& two) {
   memcpy(two.original_data_.data(), &raw_cmd, sizeof(details::linkedit_data_command));
   return ok();
 }
-
-
-
-
 }
 }

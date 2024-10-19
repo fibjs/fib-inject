@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #include <LIEF/logging.hpp>
 
 #include <iostream>
-#include <iomanip>
 
 using namespace LIEF::MachO;
 
@@ -65,7 +64,7 @@ void print_binary(const Binary& binary) {
 }
 
 int main(int argc, char **argv) {
-  LIEF::logging::set_level(LIEF::logging::LOGGING_LEVEL::LOG_DEBUG);
+  LIEF::logging::set_level(LIEF::logging::LEVEL::DEBUG);
   std::cout << "MachO Reader" << '\n';
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <MachO binary>" << '\n';

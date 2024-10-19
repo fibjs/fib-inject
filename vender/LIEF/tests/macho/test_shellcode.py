@@ -7,7 +7,7 @@ import sys
 import pytest
 from utils import is_osx, get_sample, is_apple_m1, is_github_ci
 
-from test_builder import run_program
+from .test_builder import run_program
 
 def patch(tmp_path: str, bin_path: pathlib.Path) -> str:
     original = lief.parse(bin_path.as_posix())
@@ -16,9 +16,9 @@ def patch(tmp_path: str, bin_path: pathlib.Path) -> str:
     output = f"{tmp_path}/{bin_path.name}"
 
     cpu = original.header.cpu_type
-    if cpu == lief.MachO.CPU_TYPES.ARM64:
+    if cpu == lief.MachO.Header.CPU_TYPE.ARM64:
         shellcode_path = pathlib.Path(get_sample("MachO/shellcode-stub/lief_hello_darwin_arm64.bin"))
-    elif cpu == lief.MachO.CPU_TYPES.x86_64:
+    elif cpu == lief.MachO.Header.CPU_TYPE.X86_64:
         shellcode_path = pathlib.Path(get_sample("MachO/shellcode-stub/lief_hello_darwin_x86_64.bin"))
     else:
         print(f"Unsupported architecture {cpu!s} for {bin_path}")
@@ -27,7 +27,7 @@ def patch(tmp_path: str, bin_path: pathlib.Path) -> str:
 
     shellcode = lief.parse(shellcode_path.as_posix())
 
-    #lief.logging.set_level(lief.logging.LOGGING_LEVEL.DEBUG)
+    #lief.logging.set_level(lief.logging.LEVEL.DEBUG)
 
     __TEXT  = shellcode.get_segment("__TEXT")
     __STEXT = lief.MachO.SegmentCommand("__STEXT", list(__TEXT.content))

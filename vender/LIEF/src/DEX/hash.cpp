@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,15 @@
  */
 
 #include "LIEF/DEX/hash.hpp"
-#include "LIEF/DEX.hpp"
+
+#include "LIEF/DEX/Class.hpp"
+#include "LIEF/DEX/Field.hpp"
+#include "LIEF/DEX/File.hpp"
+#include "LIEF/DEX/Header.hpp"
+#include "LIEF/DEX/MapItem.hpp"
+#include "LIEF/DEX/MapList.hpp"
+#include "LIEF/DEX/Method.hpp"
+#include "LIEF/DEX/Prototype.hpp"
 
 namespace LIEF {
 namespace DEX {

@@ -1,7 +1,7 @@
 .. _python-api-ref:
 
-Python
-======
+:fa:`brands fa-python` Python
+==============================
 
 .. toctree::
   :caption: Common
@@ -38,14 +38,13 @@ Logging
 
 .. autofunction:: lief.logging.disable
 
+.. autofunction:: lief.logging.set_path
+
 
 Logging levels
 ~~~~~~~~~~~~~~
 
-.. autoclass:: lief.logging.LOGGING_LEVEL
-  :members:
-  :inherited-members:
-  :undoc-members:
+.. autoclass:: lief.logging.LEVEL
 
 .. _python-api-error-handling:
 
@@ -53,23 +52,20 @@ Error Handling
 --------------
 
 .. autoclass:: lief.lief_errors
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 .. autoclass:: lief.ok_t
-  :members:
-  :inherited-members:
-  :undoc-members:
+
+.. autoclass:: lief.ok_error_t
 
 See also the section :ref:`err_handling`
 
 Exceptions
 ----------
 
-In the future versions of LIEF, the exceptions will be removed to be replaced with the ``ResultOrError``
+LIEF no longer uses exceptions which have been replaced with the ``ResultOrError``
 idiom.
 
 See:
+  * :ref:`err_handling`
   * https://llvm.org/docs/ProgrammersManual.html#error-handling
   * https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#recoverable-errors-with-result

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ void Parser::parse_types() {
       break;
     }
 
-    if (*descriptor_idx > file_->strings_.size()) {
+    if (*descriptor_idx >= file_->strings_.size()) {
       break;
     }
     std::unique_ptr<std::string>& descriptor_str = file_->strings_[*descriptor_idx];
@@ -201,7 +201,7 @@ void Parser::parse_fields() {
       continue;
     }
 
-    if (*class_name_idx > file_->strings_.size()) {
+    if (*class_name_idx >= file_->strings_.size()) {
       LIEF_WARN("String index for class name is corrupted");
       continue;
     }
@@ -220,7 +220,7 @@ void Parser::parse_fields() {
     std::unique_ptr<Type>& type = file_->types_[item.type_idx];
 
     // Field Name
-    if (item.name_idx > file_->strings_.size()) {
+    if (item.name_idx >= file_->strings_.size()) {
       LIEF_WARN("Name of field #{:d} is out of bound!", i);
       continue;
     }
@@ -285,7 +285,7 @@ void Parser::parse_prototypes() {
           break;
         }
 
-        if (*type_idx > file_->types_.size()) {
+        if (*type_idx >= file_->types_.size()) {
           break;
         }
 
@@ -327,7 +327,7 @@ void Parser::parse_methods() {
       break;
     }
 
-    if (*class_name_idx > file_->strings_.size()) {
+    if (*class_name_idx >= file_->strings_.size()) {
       LIEF_WARN("String index for class name is corrupted");
       continue;
     }
@@ -350,7 +350,7 @@ void Parser::parse_methods() {
     std::unique_ptr<Prototype>& pt = file_->prototypes_[item.proto_idx];
 
     // Method Name
-    if (item.name_idx > file_->strings_.size()) {
+    if (item.name_idx >= file_->strings_.size()) {
       LIEF_WARN("Name of method #{:d} is out of bound!", i);
       continue;
     }
@@ -497,7 +497,17 @@ void Parser::parse_class_data(uint32_t offset, Class& cls) {
     return;
   }
 
-  cls.methods_.reserve(*direct_methods_size + *virtual_methods_size);
+  const int64_t allocated_size = static_cast<int64_t>(*direct_methods_size) +
+                                 static_cast<int64_t>(*virtual_methods_size);
+  if (allocated_size < 0) {
+    return;
+  }
+
+  if (static_cast<size_t>(allocated_size) > this->file_->methods_.size()) {
+    return;
+  }
+
+  cls.methods_.reserve(allocated_size);
 
   // Static Fields
   // =============
@@ -579,6 +589,10 @@ void Parser::parse_field(size_t index, Class& cls, bool is_static) {
     return;
   }
 
+  if (index >= file_->fields_.size()) {
+    return;
+  }
+
   std::unique_ptr<Field>& field = file_->fields_[index];
   field->set_static(is_static);
 
@@ -613,6 +627,10 @@ void Parser::parse_method(size_t index, Class& cls, bool is_virtual) {
   // Dalvik bytecode offset
   auto code_offset = stream_->read_uleb128();
   if (!code_offset) {
+    return;
+  }
+
+  if (index >= file_->methods_.size()) {
     return;
   }
 

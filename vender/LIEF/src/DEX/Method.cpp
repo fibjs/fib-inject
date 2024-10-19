@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "logging.hpp"
 #include "LIEF/DEX/Method.hpp"
 #include "LIEF/DEX/Prototype.hpp"
 #include "LIEF/DEX/Class.hpp"
@@ -113,18 +112,7 @@ void Method::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool Method::operator==(const Method& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Method::operator!=(const Method& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Method& method) {
   const auto* proto = method.prototype();

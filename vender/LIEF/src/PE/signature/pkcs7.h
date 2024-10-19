@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_PKCS7_H_
-#define LIEF_PKCS7_H_
+#ifndef LIEF_PKCS7_H
+#define LIEF_PKCS7_H
 
 #include "mbedtls/oid.h"
 
@@ -37,5 +37,9 @@
 #define MBEDTLS_SPC_INDIRECT_DATA_OBJID     "\x2B\x06\x01\x04\x01\x82\x37\x02\x01\x04"
 #define MBEDTLS_SPC_SP_OPUS_INFO_OBJID      "\x2B\x06\x01\x04\x01\x82\x37\x02\x01\x0C"
 #define MBEDTLS_SPC_PE_IMAGE_DATAOBJ_OBJID  "\x2B\x06\x01\x04\x01\x82\x37\x02\x01\x0F"
+
+/* MS Specific OID */
+#define MS_SZOID_PLATFORM_MANIFEST_BINARY_ID "\x06\x0A\x2B\x06\x01\x04\x01\x82\x37\x0A\x03\x1C"
+#define MS_COUNTER_SIGNATURE                 "\x06\x0A\x2B\x06\x01\x04\x01\x82\x37\x03\x03\x01"
 
 #endif

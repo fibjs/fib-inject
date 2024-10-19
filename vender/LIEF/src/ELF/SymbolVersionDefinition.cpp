@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iostream>
+#include <ostream>
 #include <iomanip>
 #include <algorithm>
-#include <iterator>
 
 #include "LIEF/ELF/hash.hpp"
 
 #include "LIEF/ELF/SymbolVersionDefinition.hpp"
-#include "LIEF/ELF/SymbolVersionAuxRequirement.hpp"
+#include "LIEF/ELF/SymbolVersionAux.hpp"
 #include "ELF/Structures.hpp"
 
 namespace LIEF {
 namespace ELF {
 
-SymbolVersionDefinition::SymbolVersionDefinition() = default;
 SymbolVersionDefinition::~SymbolVersionDefinition() = default;
 
 SymbolVersionDefinition::SymbolVersionDefinition(const details::Elf64_Verdef& header) :
@@ -63,8 +61,6 @@ SymbolVersionDefinition& SymbolVersionDefinition::operator=(SymbolVersionDefinit
   return *this;
 }
 
-
-
 void SymbolVersionDefinition::swap(SymbolVersionDefinition& other) {
   std::swap(version_,            other.version_);
   std::swap(flags_,              other.flags_);
@@ -73,60 +69,8 @@ void SymbolVersionDefinition::swap(SymbolVersionDefinition& other) {
   std::swap(symbol_version_aux_, other.symbol_version_aux_);
 }
 
-
-uint16_t SymbolVersionDefinition::version() const {
-  return version_;
-}
-
-uint16_t SymbolVersionDefinition::flags() const {
-  return flags_;
-}
-
-uint16_t SymbolVersionDefinition::ndx() const {
-  return ndx_;
-}
-
-uint32_t SymbolVersionDefinition::hash() const {
-  return hash_;
-}
-
-SymbolVersionDefinition::it_version_aux SymbolVersionDefinition::symbols_aux() {
-  return symbol_version_aux_;
-}
-
-SymbolVersionDefinition::it_const_version_aux SymbolVersionDefinition::symbols_aux() const {
-  return symbol_version_aux_;
-
-}
-
-void SymbolVersionDefinition::version(uint16_t version) {
-  version_ = version;
-}
-
-void SymbolVersionDefinition::flags(uint16_t flags) {
-  flags_ = flags;
-}
-
-void SymbolVersionDefinition::hash(uint32_t hash) {
-  hash_ = hash;
-}
-
 void SymbolVersionDefinition::accept(Visitor& visitor) const {
   visitor.visit(*this);
-}
-
-
-bool SymbolVersionDefinition::operator==(const SymbolVersionDefinition& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool SymbolVersionDefinition::operator!=(const SymbolVersionDefinition& rhs) const {
-  return !(*this == rhs);
 }
 
 std::ostream& operator<<(std::ostream& os, const SymbolVersionDefinition& sym) {

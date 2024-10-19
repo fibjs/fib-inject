@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 #include <algorithm>
-#include <numeric>
-#include <sstream>
 
 #include "logging.hpp"
 
-
 #include "Object.tcc"
 #include "Binary.tcc"
+#include "paging.hpp"
 
+#include "LIEF/Visitor.hpp"
 #include "LIEF/utils.hpp"
-#include "LIEF/BinaryStream/VectorStream.hpp"
 #include "LIEF/BinaryStream/SpanStream.hpp"
 
 #include "LIEF/MachO/Binary.hpp"
-#include "LIEF/MachO/BindingInfo.hpp"
 #include "LIEF/MachO/Builder.hpp"
 #include "LIEF/MachO/ChainedBindingInfo.hpp"
 #include "LIEF/MachO/CodeSignature.hpp"
@@ -43,7 +40,6 @@
 #include "LIEF/MachO/DylinkerCommand.hpp"
 #include "LIEF/MachO/DynamicSymbolCommand.hpp"
 #include "LIEF/MachO/EncryptionInfo.hpp"
-#include "LIEF/MachO/EnumToString.hpp"
 #include "LIEF/MachO/ExportInfo.hpp"
 #include "LIEF/MachO/FunctionStarts.hpp"
 #include "LIEF/MachO/LinkEdit.hpp"
@@ -60,13 +56,13 @@
 #include "LIEF/MachO/Symbol.hpp"
 #include "LIEF/MachO/SymbolCommand.hpp"
 #include "LIEF/MachO/ThreadCommand.hpp"
+#include "LIEF/MachO/BuildVersion.hpp"
 #include "LIEF/MachO/TwoLevelHints.hpp"
 #include "LIEF/MachO/UUIDCommand.hpp"
 #include "LIEF/MachO/VersionMin.hpp"
-#include "LIEF/MachO/hash.hpp"
 #include "MachO/Structures.hpp"
 
-#include "LIEF/exception.hpp"
+#include "internal_utils.hpp"
 
 namespace LIEF {
 namespace MachO {
@@ -75,9 +71,9 @@ bool Binary::KeyCmp::operator() (const Relocation* lhs, const Relocation* rhs) c
   return *lhs < *rhs;
 }
 
-Binary::Binary() {
-  format_ = LIEF::EXE_FORMATS::FORMAT_MACHO;
-}
+Binary::Binary() :
+  LIEF::Binary(LIEF::Binary::FORMATS::MACHO)
+{}
 
 LIEF::Binary::sections_t Binary::get_abstract_sections() {
   LIEF::Binary::sections_t result;
@@ -91,7 +87,10 @@ LIEF::Binary::sections_t Binary::get_abstract_sections() {
 // LIEF Interface
 // ==============
 
-void Binary::patch_address(uint64_t address, const std::vector<uint8_t>& patch_value, LIEF::Binary::VA_TYPES) {
+void Binary::patch_address(uint64_t address,
+                           const std::vector<uint8_t>& patch_value,
+                           LIEF::Binary::VA_TYPES)
+{
   // Find the segment associated with the virtual address
   SegmentCommand* segment_topatch = segment_from_virtual_address(address);
   if (segment_topatch == nullptr) {
@@ -164,11 +163,11 @@ void Binary::patch_address(uint64_t address, uint64_t patch_value, size_t size, 
         return;
       }
   }
-
-
 }
 
-std::vector<uint8_t> Binary::get_content_from_virtual_address(uint64_t virtual_address, uint64_t size, LIEF::Binary::VA_TYPES) const {
+span<const uint8_t> Binary::get_content_from_virtual_address(
+    uint64_t virtual_address, uint64_t size, LIEF::Binary::VA_TYPES) const
+{
   const SegmentCommand* segment = segment_from_virtual_address(virtual_address);
 
   if (segment == nullptr) {
@@ -184,7 +183,7 @@ std::vector<uint8_t> Binary::get_content_from_virtual_address(uint64_t virtual_a
     checked_size = checked_size - (offset + checked_size - content.size());
   }
 
-  return {content.data() + offset, content.data() + offset + checked_size};
+  return {content.data() + offset, static_cast<size_t>(checked_size)};
 }
 
 
@@ -204,23 +203,6 @@ uint64_t Binary::entrypoint() const {
 
   LIEF_WARN("Can't find LC_MAIN nor LC_THREAD/LC_UNIXTHREAD");
   return 0;
-}
-
-bool Binary::is_pie() const {
-  return header().has(HEADER_FLAGS::MH_PIE);
-}
-
-
-bool Binary::has_nx() const {
-  if (!header().has(HEADER_FLAGS::MH_NO_HEAP_EXECUTION)) {
-    LIEF_INFO("Heap could be executable");
-  }
-  return !header().has(HEADER_FLAGS::MH_ALLOW_STACK_EXECUTION);
-}
-
-
-bool Binary::has_entrypoint() const {
-  return has_main_command() || has_thread_command();
 }
 
 LIEF::Binary::symbols_t Binary::get_abstract_symbols() {
@@ -267,76 +249,6 @@ std::vector<std::string> Binary::get_abstract_imported_libraries() const {
   }
   return result;
 }
-
-
-const Header& Binary::header() const {
-  return header_;
-}
-
-Header& Binary::header() {
-  return const_cast<Header&>(static_cast<const Binary*>(this)->header());
-}
-
-// Commands
-// ========
-
- Binary::it_commands Binary::commands() {
-  return commands_;
-}
-
-Binary::it_const_commands Binary::commands() const {
-  return commands_;
-}
-
-
-// Filesets
-// ========
-
-Binary::it_fileset_binaries Binary::filesets() {
-  return filesets_;
-
-}
-
-Binary::it_const_fileset_binaries Binary::filesets() const {
-  return filesets_;
-}
-
-
-// Symbols
-// =======
-
-Binary::it_symbols Binary::symbols() {
-  return symbols_;
-}
-
-Binary::it_const_symbols Binary::symbols() const {
-  return symbols_;
-}
-
-Binary::it_libraries Binary::libraries() {
-  return libraries_;
-}
-
-Binary::it_const_libraries Binary::libraries() const {
-  return libraries_;
-}
-
-Binary::it_segments Binary::segments() {
-  return segments_;
-}
-
-Binary::it_const_segments Binary::segments() const {
-  return segments_;
-}
-
-Binary::it_sections Binary::sections() {
-  return sections_;
-}
-
-Binary::it_const_sections Binary::sections() const {
-  return sections_;
-}
-
 
 // Relocations
 Binary::it_relocations Binary::relocations() {
@@ -404,38 +316,9 @@ bool Binary::is_exported(const Symbol& symbol) {
   return !symbol.is_external() && symbol.has_export_info();
 }
 
-Binary::it_exported_symbols Binary::exported_symbols() {
-  return {symbols_, [] (const std::unique_ptr<Symbol>& symbol) {
-    return is_exported(*symbol); }
-  };
-}
-
-Binary::it_const_exported_symbols Binary::exported_symbols() const {
-  return {symbols_, [] (const std::unique_ptr<Symbol>& symbol) {
-    return is_exported(*symbol);
-  }};
-}
 
 bool Binary::is_imported(const Symbol& symbol) {
   return symbol.is_external() && !symbol.has_export_info();
-}
-
-Binary::it_imported_symbols Binary::imported_symbols() {
-  return {symbols_, [] (const std::unique_ptr<Symbol>& symbol) {
-    return is_imported(*symbol);
-  }};
-}
-
-
-Binary::it_const_imported_symbols Binary::imported_symbols() const {
-  return {symbols_, [] (const std::unique_ptr<Symbol>& symbol) {
-    return is_imported(*symbol); }
-  };
-}
-
-
-bool Binary::has_symbol(const std::string& name) const {
-  return get_symbol(name) != nullptr;
 }
 
 const Symbol* Binary::get_symbol(const std::string& name) const {
@@ -702,9 +585,7 @@ ok_error_t Binary::shift_linkedit(size_t width) {
 }
 
 uint32_t Binary::page_size() const {
-  const bool is_arm = header().cpu_type() == CPU_TYPES::CPU_TYPE_ARM ||
-                      header().cpu_type() == CPU_TYPES::CPU_TYPE_ARM64;
-  return is_arm ? 0x4000 : 0x1000;
+  return get_pagesize(*this);
 }
 
 void Binary::shift_command(size_t width, uint64_t from_offset) {
@@ -735,8 +616,7 @@ void Binary::shift_command(size_t width, uint64_t from_offset) {
     }
 
     for (std::unique_ptr<Symbol>& s : symbols_) {
-      static constexpr size_t N_TYPE = 0x0e;
-      if (static_cast<N_LIST_TYPES>(s->type() & N_TYPE) == N_LIST_TYPES::N_SECT) {
+      if (s->type() == Symbol::TYPE::SECTION) {
         uint64_t value = s->value();
         if (value > from_offset) {
           s->value(value + width);
@@ -1009,7 +889,7 @@ ok_error_t Binary::shift(size_t value) {
           section->virtual_address(section->virtual_address() + value);
         }
 
-        if (section->type() == MACHO_SECTION_TYPES::S_ZEROFILL) {
+        if (section->type() == Section::TYPE::ZEROFILL) {
           section->virtual_address(section->virtual_address() + value);
         }
       }
@@ -1145,7 +1025,7 @@ bool Binary::remove(const LoadCommand& command) {
       });
 
   if (it == std::end(commands_)) {
-    LIEF_ERR("Unable to find command: {}", command);
+    LIEF_ERR("Unable to find command: {}", to_string(command));
     return false;
   }
 
@@ -1194,7 +1074,7 @@ bool Binary::remove(const LoadCommand& command) {
 }
 
 
-bool Binary::remove(LOAD_COMMAND_TYPES type) {
+bool Binary::remove(LoadCommand::TYPE type) {
   bool removed = false;
 
   while (LoadCommand* cmd = get(type)) {
@@ -1210,7 +1090,7 @@ bool Binary::remove_command(size_t index) {
   return remove(*commands_[index]);
 }
 
-bool Binary::has(LOAD_COMMAND_TYPES type) const {
+bool Binary::has(LoadCommand::TYPE type) const {
   const auto it = std::find_if(
       std::begin(commands_), std::end(commands_),
       [type] (const std::unique_ptr<LoadCommand>& cmd) {
@@ -1219,7 +1099,7 @@ bool Binary::has(LOAD_COMMAND_TYPES type) const {
   return it != std::end(commands_);
 }
 
-const LoadCommand* Binary::get(LOAD_COMMAND_TYPES type) const {
+const LoadCommand* Binary::get(LoadCommand::TYPE type) const {
   const auto it = std::find_if(
       std::begin(commands_), std::end(commands_),
       [type] (const std::unique_ptr<LoadCommand>& cmd) {
@@ -1232,7 +1112,7 @@ const LoadCommand* Binary::get(LOAD_COMMAND_TYPES type) const {
   return it->get();
 }
 
-LoadCommand* Binary::get(LOAD_COMMAND_TYPES type) {
+LoadCommand* Binary::get(LoadCommand::TYPE type) {
   return const_cast<LoadCommand*>(static_cast<const Binary*>(this)->get(type));
 }
 
@@ -1246,7 +1126,7 @@ bool Binary::extend(const LoadCommand& command, uint64_t size) {
       });
 
   if (it == std::end(commands_)) {
-    LIEF_ERR("Unable to find command: {}", command);
+    LIEF_ERR("Unable to find command: {}", to_string(command));
     return false;
   }
 
@@ -1311,7 +1191,7 @@ bool Binary::extend_segment(const SegmentCommand& segment, size_t size) {
         section->virtual_address(section->virtual_address() + size_aligned);
       }
 
-      if (section->type() == MACHO_SECTION_TYPES::S_ZEROFILL &&
+      if (section->type() == Section::TYPE::ZEROFILL &&
           section->virtual_address() > last_va)
       {
         section->virtual_address(section->virtual_address() + size_aligned);
@@ -1545,12 +1425,12 @@ LoadCommand* Binary::add(const SegmentCommand& segment) {
   }
 
   if (is64_) {
-    new_segment.command(LOAD_COMMAND_TYPES::LC_SEGMENT_64);
+    new_segment.command(LoadCommand::TYPE::SEGMENT_64);
     size_t needed_size = sizeof(details::segment_command_64);
     needed_size += new_segment.numberof_sections() * sizeof(details::section_64);
     new_segment.size(needed_size);
   } else {
-    new_segment.command(LOAD_COMMAND_TYPES::LC_SEGMENT);
+    new_segment.command(LoadCommand::TYPE::SEGMENT);
     size_t needed_size = sizeof(details::segment_command_32);
     needed_size += new_segment.numberof_sections() * sizeof(details::section_32);
     new_segment.size(needed_size);
@@ -1824,31 +1704,28 @@ result<uint64_t> Binary::virtual_address_to_offset(uint64_t virtual_address) con
 result<uint64_t> Binary::offset_to_virtual_address(uint64_t offset, uint64_t slide) const {
   const SegmentCommand* segment = segment_from_offset(offset);
   if (segment == nullptr) {
-    return offset + slide;
+    return slide + offset;
   }
-  const uint64_t base_address = segment->virtual_address() - segment->file_offset();
-  if (slide > 0) {
-    const uint64_t base = imagebase();
-    if (base == 0) {
-      return slide + offset;
-    }
-    return (base_address - base) + offset + slide;
+  const uint64_t delta = segment->virtual_address() - segment->file_offset();
+  const uint64_t imgbase = imagebase();
+
+  if (slide == 0) {
+    return delta + offset;
   }
-  return base_address + offset;
+
+  if (imgbase == 0) {
+    return slide +
+           segment->virtual_address() + (offset - segment->file_offset());
+  }
+  return (segment->virtual_address() - imgbase) + slide + (offset - segment->file_offset());
 }
 
 bool Binary::disable_pie() {
   if (is_pie()) {
-    header().remove(HEADER_FLAGS::MH_PIE);
+    header().remove(Header::FLAGS::PIE);
     return true;
   }
   return false;
-}
-
-
-
-bool Binary::has_section(const std::string& name) const {
-  return get_section(name) != nullptr;
 }
 
 Section* Binary::get_section(const std::string& name) {
@@ -1881,12 +1758,6 @@ const Section* Binary::get_section(const std::string& segname, const std::string
 
 Section* Binary::get_section(const std::string& segname, const std::string& secname) {
   return const_cast<Section*>(static_cast<const Binary*>(this)->get_section(segname, secname));
-}
-
-
-
-bool Binary::has_segment(const std::string& name) const {
-  return get_segment(name) != nullptr;
 }
 
 const SegmentCommand* Binary::get_segment(const std::string& name) const {
@@ -1932,11 +1803,6 @@ std::string Binary::loader() const {
   return "";
 }
 
-uint64_t Binary::fat_offset() const {
-  return fat_offset_;
-}
-
-
 bool Binary::is_valid_addr(uint64_t address) const {
   range_t r = va_ranges();
   return r.start <= address && address < r.end;
@@ -1944,43 +1810,35 @@ bool Binary::is_valid_addr(uint64_t address) const {
 
 
 Binary::range_t Binary::va_ranges() const {
-  const auto it_min = std::min_element(
-      std::begin(segments_), std::end(segments_),
-      [] (const SegmentCommand* lhs, const SegmentCommand* rhs) {
-        if (lhs->virtual_address() == 0 || rhs->virtual_address() == 0) {
-          return true;
-        }
-        return lhs->virtual_address() < rhs->virtual_address();
-      });
+  uint64_t min = uint64_t(-1);
+  uint64_t max = 0;
 
-  const auto it_max = std::min_element(
-      std::begin(segments_), std::end(segments_),
-      [] (const SegmentCommand* lhs, const SegmentCommand* rhs) {
-        return (lhs->virtual_address() + lhs->virtual_size()) > (rhs->virtual_address() + rhs->virtual_size());
-      });
+  for (const SegmentCommand* segment : segments_) {
+    min = std::min<uint64_t>(min, segment->virtual_address());
+    max = std::max(max, segment->virtual_address() + segment->virtual_size());
+  }
 
-  return {(*it_min)->virtual_address(), (*it_max)->virtual_address() + (*it_max)->virtual_size()};
+  if (min == uint64_t(-1)) {
+    return {0, 0};
+  }
+
+  return {min, max};
 }
 
 Binary::range_t Binary::off_ranges() const {
+  uint64_t min = uint64_t(-1);
+  uint64_t max = 0;
 
-  const auto it_min = std::min_element(
-      std::begin(segments_), std::end(segments_),
-      [] (const SegmentCommand* lhs, const SegmentCommand* rhs) {
-        if (lhs->file_offset() == 0 || rhs->file_offset() == 0) {
-          return true;
-        }
-        return lhs->file_offset() < rhs->file_offset();
-      });
+  for (const SegmentCommand* segment : segments_) {
+    min = std::min<uint64_t>(min, segment->file_offset());
+    max = std::max(max, segment->file_offset() + segment->file_size());
+  }
 
+  if (min == uint64_t(-1)) {
+    return {0, 0};
+  }
 
-  const auto it_max = std::min_element(
-      std::begin(segments_), std::end(segments_),
-      [] (const SegmentCommand* lhs, const SegmentCommand* rhs) {
-        return (lhs->file_offset() + lhs->file_size()) > (rhs->file_offset() + rhs->file_size());
-      });
-
-  return {(*it_min)->file_offset(), (*it_max)->file_offset() + (*it_max)->file_size()};
+  return {min, max};
 }
 
 
@@ -2006,7 +1864,7 @@ LIEF::Header Binary::get_abstract_header() const {
 LIEF::Binary::functions_t Binary::ctor_functions() const {
   LIEF::Binary::functions_t functions;
   for (const Section& section : sections()) {
-    if (section.type() != MACHO_SECTION_TYPES::S_MOD_INIT_FUNC_POINTERS) {
+    if (section.type() != Section::TYPE::MOD_INIT_FUNC_POINTERS) {
       continue;
     }
 
@@ -2276,6 +2134,18 @@ const RPathCommand* Binary::rpath() const {
   return command<RPathCommand>();
 }
 
+Binary::it_rpaths Binary::rpaths() {
+  return {commands_, [] (const std::unique_ptr<LoadCommand>& cmd) {
+    return RPathCommand::classof(cmd.get());
+  }};
+}
+
+Binary::it_const_rpaths Binary::rpaths() const {
+  return {commands_, [] (const std::unique_ptr<LoadCommand>& cmd) {
+    return RPathCommand::classof(cmd.get());
+  }};
+}
+
 // SymbolCommand command
 // +++++++++++++++++++++
 bool Binary::has_symbol_command() const {
@@ -2307,7 +2177,7 @@ const DynamicSymbolCommand* Binary::dynamic_symbol_command() const {
 // CodeSignature command
 // +++++++++++++++++++++
 bool Binary::has_code_signature() const {
-  return has(LOAD_COMMAND_TYPES::LC_CODE_SIGNATURE);
+  return has(LoadCommand::TYPE::CODE_SIGNATURE);
 }
 
 CodeSignature* Binary::code_signature() {
@@ -2315,7 +2185,7 @@ CodeSignature* Binary::code_signature() {
 }
 
 const CodeSignature* Binary::code_signature() const {
-  if (const auto* cmd = get(LOAD_COMMAND_TYPES::LC_CODE_SIGNATURE)) {
+  if (const auto* cmd = get(LoadCommand::TYPE::CODE_SIGNATURE)) {
     return cmd->as<const CodeSignature>();
   }
   return nullptr;
@@ -2325,7 +2195,7 @@ const CodeSignature* Binary::code_signature() const {
 // CodeSignatureDir command
 // ++++++++++++++++++++++++
 bool Binary::has_code_signature_dir() const {
-  return has(LOAD_COMMAND_TYPES::LC_DYLIB_CODE_SIGN_DRS);
+  return has(LoadCommand::TYPE::DYLIB_CODE_SIGN_DRS);
 }
 
 CodeSignatureDir* Binary::code_signature_dir() {
@@ -2333,7 +2203,7 @@ CodeSignatureDir* Binary::code_signature_dir() {
 }
 
 const CodeSignatureDir* Binary::code_signature_dir() const {
-  if (const auto* cmd = get(LOAD_COMMAND_TYPES::LC_DYLIB_CODE_SIGN_DRS)) {
+  if (const auto* cmd = get(LoadCommand::TYPE::DYLIB_CODE_SIGN_DRS)) {
     return cmd->as<const CodeSignatureDir>();
   }
   return nullptr;
@@ -2462,7 +2332,7 @@ const DyldExportsTrie* Binary::dyld_exports_trie() const {
 // Linker Optimization Hint command
 // ++++++++++++++++++++++++++++++++
 bool Binary::has_linker_opt_hint() const {
-  return has(LOAD_COMMAND_TYPES::LC_LINKER_OPTIMIZATION_HINT);
+  return has(LoadCommand::TYPE::LINKER_OPTIMIZATION_HINT);
 }
 
 LinkerOptHint* Binary::linker_opt_hint() {
@@ -2470,7 +2340,7 @@ LinkerOptHint* Binary::linker_opt_hint() {
 }
 
 const LinkerOptHint* Binary::linker_opt_hint() const {
-  if (const auto* cmd = get(LOAD_COMMAND_TYPES::LC_LINKER_OPTIMIZATION_HINT)) {
+  if (const auto* cmd = get(LoadCommand::TYPE::LINKER_OPTIMIZATION_HINT)) {
     return cmd->as<const LinkerOptHint>();
   }
   return nullptr;
@@ -2479,7 +2349,7 @@ const LinkerOptHint* Binary::linker_opt_hint() const {
 // Two Level Hints Command
 // ++++++++++++++++++++++++++++++++
 bool Binary::has_two_level_hints() const {
-  return has(LOAD_COMMAND_TYPES::LC_TWOLEVEL_HINTS);
+  return has(LoadCommand::TYPE::TWOLEVEL_HINTS);
 }
 
 TwoLevelHints* Binary::two_level_hints() {
@@ -2487,20 +2357,12 @@ TwoLevelHints* Binary::two_level_hints() {
 }
 
 const TwoLevelHints* Binary::two_level_hints() const {
-  if (const auto* cmd = get(LOAD_COMMAND_TYPES::LC_TWOLEVEL_HINTS)) {
+  if (const auto* cmd = get(LoadCommand::TYPE::TWOLEVEL_HINTS)) {
     return cmd->as<const TwoLevelHints>();
   }
   return nullptr;
 }
 
-
-LoadCommand* Binary::operator[](LOAD_COMMAND_TYPES type) {
-  return get(type);
-}
-
-const LoadCommand* Binary::operator[](LOAD_COMMAND_TYPES type) const {
-  return get(type);
-}
 
 
 void Binary::accept(LIEF::Visitor& visitor) const {
@@ -2512,9 +2374,9 @@ Symbol* Binary::add_local_symbol(uint64_t address, const std::string& name) {
 
   auto sym = std::make_unique<Symbol>();
   sym->category_          = Symbol::CATEGORY::LOCAL;
-  sym->origin_            = SYMBOL_ORIGINS::SYM_ORIGIN_LC_SYMTAB;
+  sym->origin_            = Symbol::ORIGIN::LC_SYMTAB;
   sym->numberof_sections_ = 0;
-  sym->description_       = static_cast<uint16_t>(SYMBOL_DESCRIPTIONS::N_NO_DEAD_STRIP);
+  sym->description_       = static_cast<uint16_t>(/* N_NO_DEAD_STRIP */0x20);
 
   sym->value(address);
   sym->name(name);
@@ -2558,40 +2420,39 @@ void Binary::refresh_seg_offset() {
   }
 }
 
-
 Binary::~Binary() = default;
 
 std::ostream& Binary::print(std::ostream& os) const {
-  os << "Header" << std::endl;
-  os << "======" << std::endl;
+  os << "Header" << '\n';
+  os << "======" << '\n';
 
   os << header();
-  os << std::endl;
+  os << '\n';
 
 
-  os << "Commands" << std::endl;
-  os << "========" << std::endl;
+  os << "Commands" << '\n';
+  os << "========" << '\n';
   for (const LoadCommand& cmd : commands()) {
-    os << cmd << std::endl;
+    os << cmd << '\n';
   }
 
-  os << std::endl;
+  os << '\n';
 
-  os << "Sections" << std::endl;
-  os << "========" << std::endl;
+  os << "Sections" << '\n';
+  os << "========" << '\n';
   for (const Section& section : sections()) {
-    os << section << std::endl;
+    os << section << '\n';
   }
 
-  os << std::endl;
+  os << '\n';
 
-  os << "Symbols" << std::endl;
-  os << "=======" << std::endl;
+  os << "Symbols" << '\n';
+  os << "=======" << '\n';
   for (const Symbol& symbol : symbols()) {
-    os << symbol << std::endl;
+    os << symbol << '\n';
   }
 
-  os << std::endl;
+  os << '\n';
   return os;
 }
 

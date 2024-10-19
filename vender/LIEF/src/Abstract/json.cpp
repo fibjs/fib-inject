@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,6 @@ void AbstractJsonVisitor::visit(const Binary& binary) {
   }
 
 
-  node_["name"]               = binary.name();
   node_["entrypoint"]         = binary.entrypoint();
   node_["format"]             = to_string(binary.format());
   node_["original_size"]      = binary.original_size();

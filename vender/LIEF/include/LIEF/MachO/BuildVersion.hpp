@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,64 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_BUILD_VERSION_COMMAND_H_
-#define LIEF_MACHO_BUILD_VERSION_COMMAND_H_
+#ifndef LIEF_MACHO_BUILD_VERSION_COMMAND_H
+#define LIEF_MACHO_BUILD_VERSION_COMMAND_H
 #include <vector>
-#include <iostream>
+#include <ostream>
 #include <array>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/MachO/LoadCommand.hpp"
+#include "LIEF/MachO/BuildToolVersion.hpp"
 
 namespace LIEF {
 namespace MachO {
 
 namespace details {
-struct build_tool_version;
 struct build_version_command;
 }
-
-//! Class that represents a tool's version that was
-//! involved in the build of the binary
-class LIEF_API BuildToolVersion : public LIEF::Object {
-  public:
-
-  //! A version is an array of **3** integers
-  using version_t = std::array<uint32_t, 3>;
-
-  public:
-  enum class TOOLS {
-    UNKNOWN = 0,
-    CLANG   = 1,
-    SWIFT   = 2,
-    LD      = 3,
-  };
-
-  public:
-  BuildToolVersion();
-  BuildToolVersion(const details::build_tool_version& tool);
-
-  //! The tools used
-  TOOLS tool() const;
-
-  //! Version associated with the tool
-  version_t version() const;
-
-  virtual ~BuildToolVersion();
-
-  bool operator==(const BuildToolVersion& rhs) const;
-  bool operator!=(const BuildToolVersion& rhs) const;
-
-  void accept(Visitor& visitor) const override;
-
-  LIEF_API friend std::ostream& operator<<(std::ostream& os, const BuildToolVersion& tool);
-
-  private:
-  TOOLS tool_{TOOLS::UNKNOWN};
-  version_t version_;
-};
 
 class LIEF_API BuildVersion : public LoadCommand {
   friend class BinaryParser;
@@ -91,42 +50,64 @@ class LIEF_API BuildVersion : public LoadCommand {
   };
 
   public:
-  BuildVersion();
+  BuildVersion() = default;
   BuildVersion(const details::build_version_command& version_cmd);
+  BuildVersion(const PLATFORMS platform,
+               const version_t &minos,
+               const version_t &sdk,
+               const tools_list_t &tools);
 
-  BuildVersion& operator=(const BuildVersion& copy);
-  BuildVersion(const BuildVersion& copy);
+  BuildVersion& operator=(const BuildVersion& copy) = default;
+  BuildVersion(const BuildVersion& copy) = default;
 
-  BuildVersion* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<BuildVersion>(new BuildVersion(*this));
+  }
 
-  version_t minos() const;
-  void minos(version_t version);
+  version_t minos() const {
+    return minos_;
+  }
 
-  version_t sdk() const;
-  void sdk(version_t version);
+  void minos(version_t version) {
+    minos_ = version;
+  }
 
-  PLATFORMS platform() const;
-  void platform(PLATFORMS plat);
+  version_t sdk() const {
+    return sdk_;
+  }
+  void sdk(version_t version) {
+    sdk_ = version;
+  }
 
-  tools_list_t tools() const;
+  PLATFORMS platform() const {
+    return platform_;
+  }
+  void platform(PLATFORMS plat) {
+    platform_ = plat;
+  }
 
-  virtual ~BuildVersion();
+  const tools_list_t& tools() const {
+    return tools_;
+  }
 
-  bool operator==(const BuildVersion& rhs) const;
-  bool operator!=(const BuildVersion& rhs) const;
+  ~BuildVersion() override = default;
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::BUILD_VERSION;
+  }
 
   private:
-  PLATFORMS platform_{PLATFORMS::UNKNOWN};
+  PLATFORMS platform_ = PLATFORMS::UNKNOWN;
   version_t minos_;
   version_t sdk_;
   tools_list_t tools_;
 };
+
+LIEF_API const char* to_string(BuildVersion::PLATFORMS e);
 
 }
 }

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_PE_DATA_DIRECTORY_CPP_C_API_
-#define LIEF_PE_DATA_DIRECTORY_CPP_C_API_
+#ifndef LIEF_PE_DATA_DIRECTORY_CPP_C_API
+#define LIEF_PE_DATA_DIRECTORY_CPP_C_API
 
 #include "LIEF/PE/Binary.h"
 #include "LIEF/PE/Binary.hpp"

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 namespace LIEF {
 namespace PE {
 const char* oid_to_string(const oid_t& oid) {
-  const std::unordered_map<oid_t, const char*> oid_to_str  {
+  static const std::unordered_map<oid_t, const char*> oid_to_str  {
     { "0.2.262.1.10",                     "TELESEC" },
     { "0.2.262.1.10.0",                   "EXTENSION" },
     { "0.2.262.1.10.1",                   "MECHANISM" },
@@ -2242,7 +2242,9 @@ const char* oid_to_string(const oid_t& oid) {
     { "1.3.6.1.4.1.40869.1.1.22.3",       "TWCA_EV_POLICY" },
     { "2.16.840.1.113733.1.7.23.6",       "VERI_SIGN_EV_POLICY" },
     { "2.16.840.1.114171.500.9",          "WELLS_FARGO_EV_POLICY" },
-    { "1.3.6.1.4.1.311.3.3.1",            "MS_COUNTER_SIGN" }
+    { "1.3.6.1.4.1.311.3.3.1",            "MS_COUNTER_SIGN" },
+    { "1.3.6.1.4.1.311.10.3.28",          "szOID_PLATFORM_MANIFEST_BINARY_ID" },
+    { "1.3.6.1.4.1.311.2.6.1",            "SPC_RELAXED_PE_MARKER_CHECK_OBJID" },
   };
   auto   it  = oid_to_str.find(oid);
   return it == oid_to_str.end() ? oid.c_str() : it->second;

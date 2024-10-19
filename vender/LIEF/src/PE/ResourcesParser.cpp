@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@
 #include "LIEF/PE/ResourcesManager.hpp"
 #include "LIEF/PE/ResourceData.hpp"
 #include "LIEF/PE/resources/LangCodeItem.hpp"
-#include "LIEF/PE/resources/ResourceStringTable.hpp"
-#include "LIEF/PE/resources/ResourceAccelerator.hpp"
 #include "LIEF/PE/resources/ResourceStringFileInfo.hpp"
 #include "LIEF/PE/resources/ResourceVarFileInfo.hpp"
 #include "LIEF/PE/resources/ResourceFixedFileInfo.hpp"
@@ -693,8 +691,7 @@ ok_error_t ResourcesParser::parse_tail_ext_dialog(ResourceDialog& dialog, Binary
   }
 
   if (auto res = stream.read<uint8_t>()) {
-    italic = *res;
-    dialog.italic_ = italic;
+    dialog.italic_ = static_cast<bool>(*res);
     LIEF_DEBUG("DLGTEMPLATEEX.italic: {}", italic);
   } else {
     LIEF_INFO("Can't read DLGTEMPLATEEX.italic");

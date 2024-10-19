@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
  */
 #ifndef LIEF_PE_RESOURCES_PARSER_H
 #define LIEF_PE_RESOURCES_PARSER_H
+#include <vector>
 #include "LIEF/errors.hpp"
-#include "LIEF/PE/resources/ResourceVersion.hpp"
+
 namespace LIEF {
 class BinaryStream;
 namespace PE {
 class ResourceVersion;
 class LangCodeItem;
 class ResourceData;
+class ResourceDialog;
 
 struct ResourcesParser {
   //! Parse the resource version structure described by:

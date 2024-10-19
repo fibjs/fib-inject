@@ -1,4 +1,4 @@
-/* Copyright 2021 - 2022 R. Thomas
+/* Copyright 2021 - 2024 R. Thomas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,15 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_OBJECT_FILE_LAYOUT_H_
-#define LIEF_ELF_OBJECT_FILE_LAYOUT_H_
+#ifndef LIEF_ELF_OBJECT_FILE_LAYOUT_H
+#define LIEF_ELF_OBJECT_FILE_LAYOUT_H
+
 #include <LIEF/types.hpp>
 #include <LIEF/visibility.h>
 #include <LIEF/ELF/Binary.hpp>
 #include <LIEF/ELF/Section.hpp>
 #include <LIEF/ELF/Symbol.hpp>
 #include <LIEF/iostream.hpp>
-#include <ELF/DataHandler/Handler.hpp>
+
+#include "ELF/DataHandler/Handler.hpp"
 
 #include "logging.hpp"
 #include "Layout.hpp"
@@ -62,7 +64,7 @@ class LIEF_LOCAL ObjectFileLayout : public Layout {
     uint64_t last_offset_sections = 0;
 
     for (std::unique_ptr<Section>& section : binary_->sections_) {
-      if (section->type() == LIEF::ELF::ELF_SECTION_TYPES::SHT_NOBITS) {
+      if (section->type() == Section::TYPE::NOBITS) {
         continue;
       }
       last_offset_sections = std::max<uint64_t>(section->file_offset() + section->size(),
@@ -101,7 +103,7 @@ class LIEF_LOCAL ObjectFileLayout : public Layout {
   template<class ELF_T>
   size_t symtab_size() {
     using Elf_Sym = typename ELF_T::Elf_Sym;
-    return binary_->static_symbols_.size() * sizeof(Elf_Sym);
+    return binary_->symtab_symbols_.size() * sizeof(Elf_Sym);
   }
 
   inline relocations_map_t& relocation_map() {

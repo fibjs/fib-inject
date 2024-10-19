@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  * Copyright 2017 - 2021 K. Nakagawa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,56 +16,24 @@
  */
 
 #include <utility>
+#include <iomanip>
 
 #include "LIEF/utils.hpp"
 
-#include "LIEF/PE/hash.hpp"
-#include "LIEF/PE/EnumToString.hpp"
+#include "LIEF/Visitor.hpp"
 
 #include "LIEF/PE/resources/ResourceStringTable.hpp"
 
 namespace LIEF {
 namespace PE {
 
-ResourceStringTable::ResourceStringTable(const ResourceStringTable&) = default;
-ResourceStringTable& ResourceStringTable::operator=(const ResourceStringTable&) = default;
-ResourceStringTable::~ResourceStringTable() = default;
-
-ResourceStringTable::ResourceStringTable() :
-  length_{0}
-{}
-
-ResourceStringTable::ResourceStringTable(int16_t length, std::u16string name) :
-  name_{std::move(name)},
-  length_{length}
-{}
-
-int16_t ResourceStringTable::length() const {
-  return length_;
-}
-
-const std::u16string& ResourceStringTable::name() const {
-  return name_;
-}
 
 void ResourceStringTable::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool ResourceStringTable::operator==(const ResourceStringTable& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  return Hash::hash(*this) == Hash::hash(rhs);
-}
-
-bool ResourceStringTable::operator!=(const ResourceStringTable& rhs) const {
-  return !(*this == rhs);
-}
-
-
 std::ostream& operator<<(std::ostream& os, const ResourceStringTable& string_table) {
-  os << u16tou8(string_table.name()) << "\n";
+  os << u16tou8(string_table.name()) << '\n';
   return os;
 }
 

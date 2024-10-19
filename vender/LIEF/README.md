@@ -1,34 +1,34 @@
 <p align="center" >
-<img width="90%" src="https://github.com/lief-project/LIEF/blob/master/.github/images/architecture.png"/><br />
+<img width="90%" src="https://github.com/lief-project/LIEF/blob/main/.github/images/architecture.png"/><br />
 </p>
 
 <p align="center">
-  <a href="https://gitter.im/lief-project">
-    <img src="https://img.shields.io/gitter/room/gitterHQ/gitter.svg?style=flat-square">
+  <a href="https://discord.gg/7hRFGWYedu">
+    <img src="https://img.shields.io/discord/1117013848914931762">
   </a>
   &nbsp;
-  <a href="https://github.com/lief-project/LIEF/actions?query=workflow%3A%22Linux+x86-64%22">
-    <img alt="Linux x86-64 CI status" src="https://img.shields.io/github/workflow/status/lief-project/LIEF/Linux%20x86-64/master?label=Linux%20x86-64&logo=github">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/linux-x86-64.yml">
+    <img alt="Linux x86-64 CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/linux-x86-64.yml?branch=main&label=Linux%20x86-64&logo=github">
   </a>
   &nbsp;
-  <a href="https://github.com/lief-project/LIEF/actions?query=workflow%3A%22Linux+AArch64%22">
-    <img alt="Linux AArch64 CI status" src="https://img.shields.io/github/workflow/status/lief-project/LIEF/Linux%20AArch64/master?label=Linux%20AArch64&logo=github">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/linux-aarch64.yml">
+    <img alt="Linux AArch64 CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/linux-aarch64.yml?branch=main&label=Linux%20AArch64&logo=github">
   </a>
   &nbsp;
-  <a href="https://github.com/lief-project/LIEF/actions?query=workflow%3AAndroid">
-    <img alt="Android CI status" src="https://img.shields.io/github/workflow/status/lief-project/LIEF/Android/master?label=Android&logo=github">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/android.yml">
+    <img alt="Android CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/android.yml?branch=main&label=Android&logo=github">
   </a>
   &nbsp;
-  <a href="https://github.com/lief-project/LIEF/actions?query=workflow%3AmacOS">
-    <img alt="macOS CI status" src="https://img.shields.io/github/workflow/status/lief-project/LIEF/macOS/master?label=macOS&logo=github">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/osx.yml">
+    <img alt="macOS CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/osx.yml?branch=main&label=macOS&logo=github">
   </a>
   &nbsp;
-  <a href="https://github.com/lief-project/LIEF/actions?query=workflow%3AiOS">
-    <img alt="iOS CI status" src="https://img.shields.io/github/workflow/status/lief-project/LIEF/iOS/master?label=iOS&logo=github">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/ios.yml">
+    <img alt="iOS CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/ios.yml?branch=main&label=iOS&logo=github">
   </a>
   &nbsp;
-  <a href="https://ci.appveyor.com/project/Romain/lief/branch/master">
-    <img alt="Windows CI status" src="https://img.shields.io/appveyor/build/Romain/LIEF/master?label=Windows&logo=appveyor">
+  <a href="https://github.com/lief-project/LIEF/actions/workflows/windows-all.yml">
+    <img alt="Windows CI status" src="https://img.shields.io/github/actions/workflow/status/lief-project/LIEF/windows-all.yml?branch=main&label=Windows&logo=github">
   </a>
   &nbsp;
   <a href="https://github.com/lief-project/LIEF/releases">
@@ -36,7 +36,7 @@
   </a>
   &nbsp;
   <a href="https://twitter.com/LIEF_project">
-   <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/lief_project?color=1da1f2&label=Follow&logo=twitter&logoColor=white&style=flat-square">
+   <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/lief_project">
   </a>
 </p>
 
@@ -44,7 +44,7 @@
 <p align="center">
   <a href="https://lief-project.github.io/blog/"><b>Blog</b></a> •
   <a href="https://lief-project.github.io/doc/latest/index.html"><b>Documentation</b></a> •
-  <a href="#about-A"><b>About</b></a>
+  <a href="#user-content-about-1"><b>About</b></a>
 </p>
 <br />
 
@@ -58,7 +58,7 @@ Main features:
   * **Parsing**: LIEF can parse ELF, PE, MachO, OAT, DEX, VDEX, ART and provides an user-friendly API to access to format internals.
   * **Modify**: LIEF enables to modify some parts of these formats
   * **Abstract**: Three formats have common features like sections, symbols, entry point... LIEF factors them.
-  * **API**: LIEF can be used in C, C++ and Python
+  * **API**: LIEF can be used in C++, Python, Rust and C
 
 # Content
 
@@ -105,7 +105,7 @@ pip install lief
 To install nightly build:
 
 ```console
-pip install [--user] --index-url https://lief.s3-website.fr-par.scw.cloud/latest lief==0.13.0.dev0
+pip install [--user] --index-url https://lief.s3-website.fr-par.scw.cloud/latest lief==0.15.0.dev0
 ```
 
 ### Packages
@@ -113,7 +113,7 @@ pip install [--user] --index-url https://lief.s3-website.fr-par.scw.cloud/latest
 - **Nightly**:
   * SDK: https://lief.s3-website.fr-par.scw.cloud/latest/sdk
   * Python Wheels: https://lief.s3-website.fr-par.scw.cloud/latest/lief
-- **v0.12.1**: https://github.com/lief-project/LIEF/releases/tag/0.12.1
+- **v0.14.1**: https://github.com/lief-project/LIEF/releases/tag/0.14.1
 
 Here are guides to install or integrate LIEF:
 
@@ -131,16 +131,37 @@ import lief
 
 # ELF
 binary = lief.parse("/usr/bin/ls")
-print(binary)
+for section in binary.sections:
+    print(section.name, section.virtual_address)
 
 # PE
 binary = lief.parse("C:\\Windows\\explorer.exe")
-print(binary)
+
+if rheader := pe.rich_header:
+    print(rheader.key)
 
 # Mach-O
 binary = lief.parse("/usr/bin/ls")
-print(binary)
+for fixup in binary.dyld_chained_fixups:
+    print(fixup)
 ```
+
+### Rust
+
+```rust
+use lief::Binary;
+use lief::pe::debug::Entries::CodeViewPDB;
+
+
+if let Some(Binary::PE(pe)) = Binary::parse(path.as_str()) {
+    for entry in pe.debug() {
+        if let CodeViewPDB(pdb_view) = entry {
+            println!("{}", pdb_view.filename());
+        }
+    }
+}
+```
+
 
 ### C++
 
@@ -150,17 +171,23 @@ print(binary)
 int main(int argc, char** argv) {
   // ELF
   if (std::unique_ptr<const LIEF::ELF::Binary> elf = LIEF::ELF::Parser::parse("/bin/ls")) {
-    std::cout << *elf << '\n';
+    for (const LIEF::ELF::Section& section : elf->sections()) {
+      std::cout << section->name() << ' ' << section->virtual_address() << '\n';
+    }
   }
 
   // PE
   if (std::unique_ptr<const LIEF::PE::Binary> pe = LIEF::PE::Parser::parse("C:\\Windows\\explorer.exe")) {
-    std::cout << *pe << '\n';
+    if (const LIEF::PE::RichHeader* rheader : pe->rich_header()) {
+      std::cout << rheader->key() << '\n';
+    }
   }
 
   // Mach-O
   if (std::unique_ptr<LIEF::MachO::FatBinary> macho = LIEF::MachO::Parser::parse("/bin/ls")) {
-    std::cout << *macho << '\n';
+    for (const LIEF::MachO::DyldChainedFixups& fixup : macho->dyld_chained_fixups()) {
+      std::cout << fixup << '\n';
+    }
   }
 
   return 0;
@@ -197,7 +224,7 @@ int main(int argc, char** argv) {
 ## Contact
 
 * **Mail**: contact at lief re
-* **Gitter**: [lief-project](https://gitter.im/lief-project)
+* **Discord**: [LIEF](https://discord.gg/7hRFGWYedu)
 
 ## About
 
@@ -207,7 +234,7 @@ Romain Thomas ([@rh0main](https://twitter.com/rh0main)) - [Quarkslab](https://ww
 
 ### License
 
-LIEF is provided under the [Apache 2.0 license](https://github.com/lief-project/LIEF/blob/0.12.1/LICENSE).
+LIEF is provided under the [Apache 2.0 license](https://github.com/lief-project/LIEF/blob/0.14.1/LICENSE).
 
 ### Bibtex
 

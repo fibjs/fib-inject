@@ -29,7 +29,7 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
     }
 
     LIEF::ELF::ARCH machine_type = binary->header().machine_type();
-    if (machine_type == LIEF::ELF::ARCH::EM_LOONGARCH || machine_type == LIEF::ELF::ARCH::EM_MIPS) {
+    if (machine_type == LIEF::ELF::ARCH::LOONGARCH || machine_type == LIEF::ELF::ARCH::MIPS) {
         result.Set("result", Napi::Number::New(env, InjectResult::kError));
         return result;
     }
@@ -52,16 +52,15 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
         }
     }
 
-    // std::unique_ptr<LIEF::ELF::Note> note = LIEF::ELF::Note::create(note_name, LIEF::ELF::Note::TYPE::UNKNOWN,
-    //     std::vector<uint8_t>(data.Data(), data.Data() + data.ByteLength()));
-    // binary->add(*note);
+    std::unique_ptr<LIEF::ELF::Note> note = LIEF::ELF::Note::create(note_name, LIEF::ELF::Note::TYPE::GNU_BUILD_ATTRIBUTE_OPEN,
+        std::vector<uint8_t>(data.Data(), data.Data() + data.ByteLength()), "");
+    binary->add(*note);
 
-    LIEF::ELF::Note note;
-    note.name(note_name);
-    note.description(std::vector<uint8_t>(data.Data(), data.Data() + data.ByteLength()));
-    binary->add(note);
+    LIEF::ELF::Builder builder { *binary };
+    builder.config().notes = true;
+    builder.build();
+    std::vector<uint8_t> output = builder.get_build();
 
-    std::vector<uint8_t> output = binary->raw();
     Napi::Uint8Array output_data = Napi::Uint8Array::New(env, output.size());
     std::copy(output.begin(), output.end(), output_data.Data());
 

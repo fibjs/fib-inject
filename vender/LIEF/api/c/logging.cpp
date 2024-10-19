@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,5 +27,5 @@ void lief_logging_enable(void) {
 }
 
 void lief_logging_set_level(uint32_t level) {
-  set_level(static_cast<LOGGING_LEVEL>(level));
+  set_level(static_cast<LEVEL>(level));
 }

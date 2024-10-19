@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,85 +14,23 @@
  * limitations under the License.
  */
 #include <array>
-#include <iostream>
+#include <ostream>
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <utility>
 
+#include "LIEF/Visitor.hpp"
+
 #include "logging.hpp"
 #include "LIEF/Abstract/hash.hpp"
-#include "LIEF/exception.hpp"
+
 
 #include "LIEF/Abstract/Section.hpp"
 
 #include "Section.tcc"
 
 namespace LIEF {
-
-Section::Section() = default;
-
-Section::Section(std::string name) :
-  name_{std::move(name)}
-{}
-
-
-Section::~Section() = default;
-Section& Section::operator=(const Section&) = default;
-Section::Section(const Section&) = default;
-
-std::string Section::name() const {
-  return name_.c_str();
-}
-
-
-const std::string& Section::fullname() const {
-  return name_;
-}
-
-
-void Section::name(const std::string& name) {
-  name_ = name;
-}
-
-
-void Section::content(const std::vector<uint8_t>&) {
-  LIEF_ERR("Not supported by this format");
-}
-
-
-span<const uint8_t> Section::content() const {
-  LIEF_ERR("Not supported by this format");
-  return {};
-}
-
-
-uint64_t Section::size() const {
-  return size_;
-}
-
-
-void Section::size(uint64_t size) {
-  size_ = size;
-}
-
-uint64_t Section::offset() const {
-  return offset_;
-}
-
-
-uint64_t Section::virtual_address() const {
-  return virtual_address_;
-}
-
-void Section::virtual_address(uint64_t virtual_address) {
-  virtual_address_ = virtual_address;;
-}
-
-void Section::offset(uint64_t offset) {
-  offset_ = offset;
-}
-
 
 // Search functions
 // ================
@@ -127,7 +65,7 @@ size_t Section::search(uint64_t integer, size_t pos, size_t size) const {
 size_t Section::search(const std::vector<uint8_t>& pattern, size_t pos) const {
   span<const uint8_t> content = this->content();
 
-  const auto it_found = std::search(
+  const auto* it_found = std::search(
       std::begin(content) + pos, std::end(content),
       std::begin(pattern), std::end(pattern));
 
@@ -177,7 +115,7 @@ std::vector<size_t> Section::search_all(const std::string& v) const {
 double Section::entropy() const {
   std::array<uint64_t, 256> frequencies = { {0} };
   span<const uint8_t> content = this->content();
-  if (content.size() == 0) {
+  if (content.empty() || content.size() == 1) {
     return 0.;
   }
   for (uint8_t x : content) {
@@ -200,18 +138,7 @@ void Section::accept(Visitor& visitor) const {
 }
 
 
-bool Section::operator==(const Section& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = AbstractHash::hash(*this);
-  size_t hash_rhs = AbstractHash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Section::operator!=(const Section& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Section& entry) {
   os << std::hex;

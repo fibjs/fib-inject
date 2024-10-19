@@ -1,6 +1,6 @@
 
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,15 @@
 #include "LIEF/utils.hpp"
 
 #include <numeric>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 #define PRINT_FIELD(name,attr) \
-  os << std::setw(WIDTH) << std::setfill(' ') << name << std::hex << attr << std::endl
+  os << std::setw(WIDTH) << std::setfill(' ') << name << std::hex << attr << '\n'
 
 #define PRINT_LOCATION(name,attr)                                               \
   os << std::setw(WIDTH) << std::setfill(' ') << name << std::hex << attr.first \
-     << std::dec << " (#" << attr.second << ")" << std::endl
+     << std::dec << " (#" << attr.second << ")" << '\n'
 
 namespace LIEF {
 namespace DEX {
@@ -111,18 +111,7 @@ void Header::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool Header::operator==(const Header& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Header::operator!=(const Header& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Header& hdr) {
   static constexpr size_t WIDTH = 20;

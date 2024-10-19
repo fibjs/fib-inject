@@ -1,6 +1,6 @@
 
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "LIEF/ELF/Parser.hpp"
 #include "LIEF/ELF/Symbol.hpp"
 #include "LIEF/ELF/utils.hpp"
+#include "frozen.hpp"
 
 namespace LIEF {
 namespace OAT {
@@ -46,7 +47,8 @@ bool is_oat(const std::vector<uint8_t>& raw) {
 
 bool is_oat(const ELF::Binary& elf) {
   if (const auto* oatdata = elf.get_dynamic_symbol("oatdata")) {
-    const std::vector<uint8_t>& header = elf.get_content_from_virtual_address(oatdata->value(), sizeof(details::oat_magic));
+    span<const uint8_t> header =
+      elf.get_content_from_virtual_address(oatdata->value(), sizeof(details::oat_magic));
     return std::equal(std::begin(header), std::end(header),
                       std::begin(details::oat_magic));
 
@@ -79,7 +81,10 @@ oat_version_t version(const std::vector<uint8_t>& raw) {
 
 oat_version_t version(const ELF::Binary& elf) {
   if (const auto* oatdata = elf.get_dynamic_symbol("oatdata")) {
-    const std::vector<uint8_t>& header = elf.get_content_from_virtual_address(oatdata->value() + sizeof(details::oat_magic), sizeof(details::oat_version));
+    span<const uint8_t> header =
+      elf.get_content_from_virtual_address(oatdata->value() + sizeof(details::oat_magic),
+                                           sizeof(details::oat_version));
+
     if (header.size() != sizeof(details::oat_version)) {
       return 0;
     }
@@ -89,7 +94,7 @@ oat_version_t version(const ELF::Binary& elf) {
 }
 
 Android::ANDROID_VERSIONS android_version(oat_version_t version) {
-  static const std::map<oat_version_t, Android::ANDROID_VERSIONS> oat2android {
+  CONST_MAP(oat_version_t, Android::ANDROID_VERSIONS, 6) oat2android {
     { 64,  Android::ANDROID_VERSIONS::VERSION_601 },
     { 79,  Android::ANDROID_VERSIONS::VERSION_700 },
     { 88,  Android::ANDROID_VERSIONS::VERSION_712 },
@@ -99,7 +104,8 @@ Android::ANDROID_VERSIONS android_version(oat_version_t version) {
 
   };
   auto   it  = oat2android.lower_bound(version);
-  return it == oat2android.end() ? Android::ANDROID_VERSIONS::VERSION_UNKNOWN : it->second;
+  return it == oat2android.end() ?
+               Android::ANDROID_VERSIONS::VERSION_UNKNOWN : it->second;
 }
 
 
@@ -107,9 +113,3 @@ Android::ANDROID_VERSIONS android_version(oat_version_t version) {
 
 } // namespace OAT
 } // namespace LIEF
-
-
-
-
-
-

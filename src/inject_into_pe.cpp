@@ -42,16 +42,14 @@ Napi::Value inject_into_pe(const Napi::CallbackInfo& info)
     auto rcdata_node_iter = std::find_if(
         std::begin(resources->childs()), std::end(resources->childs()),
         [](const LIEF::PE::ResourceNode& node) {
-            // return node.id() == static_cast<uint32_t>(LIEF::PE::ResourcesManager::TYPE::RCDATA);
-            return node.id() == static_cast<uint32_t>(LIEF::PE::RESOURCE_TYPES::RCDATA);
+            return node.id() == static_cast<uint32_t>(LIEF::PE::ResourcesManager::TYPE::RCDATA);
         });
 
     if (rcdata_node_iter != std::end(resources->childs())) {
         rcdata_node = &*rcdata_node_iter;
     } else {
         LIEF::PE::ResourceDirectory new_rcdata_node;
-        // new_rcdata_node.id(static_cast<uint32_t>(LIEF::PE::ResourcesManager::TYPE::RCDATA));
-        new_rcdata_node.id(static_cast<uint32_t>(LIEF::PE::RESOURCE_TYPES::RCDATA));
+        new_rcdata_node.id(static_cast<uint32_t>(LIEF::PE::ResourcesManager::TYPE::RCDATA));
         rcdata_node = &resources->add_child(new_rcdata_node);
     }
 

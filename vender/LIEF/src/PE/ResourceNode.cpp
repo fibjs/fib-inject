@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 #include <algorithm>
-#include <cwctype>
-#include <sstream>
 #include <iomanip>
 
 #include "logging.hpp"
-#include "LIEF/PE/hash.hpp"
+#include "LIEF/Visitor.hpp"
 
 #include "LIEF/utils.hpp"
 
 #include "LIEF/PE/ResourceNode.hpp"
 #include "LIEF/PE/ResourceDirectory.hpp"
 #include "LIEF/PE/ResourceData.hpp"
+
+#include "internal_utils.hpp"
 
 namespace LIEF {
 namespace PE {
@@ -35,6 +35,10 @@ ResourceNode::~ResourceNode() = default;
 
 ResourceNode::ResourceNode(ResourceNode&& other) = default;
 ResourceNode& ResourceNode::operator=(ResourceNode&& other) = default;
+
+ResourceNode::ResourceNode(TYPE type) :
+  type_(type)
+{}
 
 ResourceNode::ResourceNode(const ResourceNode& other) :
   Object{other},
@@ -73,51 +77,13 @@ void ResourceNode::swap(ResourceNode& other) {
   std::swap(depth_,  other.depth_);
 }
 
-uint32_t ResourceNode::id() const {
-  return id_;
-}
-
-
-ResourceNode::it_childs ResourceNode::childs() {
-  return childs_;
-}
-
-
-ResourceNode::it_const_childs ResourceNode::childs() const {
-  return childs_;
-}
-
-
-const std::u16string& ResourceNode::name() const {
-  return name_;
-}
-
-
-bool ResourceNode::is_directory() const {
-  return type_ == TYPE::DIRECTORY;
-}
-
-bool ResourceNode::is_data() const {
-  return type_ == TYPE::DATA;
-}
-
-
-bool ResourceNode::has_name() const {
-  return static_cast<bool>(id() & 0x80000000);
-}
-
-uint32_t ResourceNode::depth() const {
-  return depth_;
-}
-
-
 ResourceNode& ResourceNode::add_child(const ResourceDirectory& child) {
 
   auto new_node = std::make_unique<ResourceDirectory>(child);
   new_node->depth_ = depth_ + 1;
 
   if (is_directory()) {
-    auto* dir = reinterpret_cast<ResourceDirectory*>(this);
+    auto* dir = static_cast<ResourceDirectory*>(this);
 
     if (child.has_name()) {
       dir->numberof_name_entries(dir->numberof_name_entries() + 1);
@@ -138,7 +104,7 @@ ResourceNode& ResourceNode::add_child(const ResourceData& child) {
 
 
   if (is_directory()) {
-    auto* dir = reinterpret_cast<ResourceDirectory*>(this);
+    auto* dir = static_cast<ResourceDirectory*>(this);
 
     if (child.has_name()) {
       dir->numberof_name_entries(dir->numberof_name_entries() + 1);
@@ -174,14 +140,14 @@ void ResourceNode::delete_child(const ResourceNode& node) {
       });
 
   if (it_node == std::end(childs_)) {
-    LIEF_ERR("Unable to find the node {}", node);
+    LIEF_ERR("Unable to find the node {}", to_string(node));
     return;
   }
 
   std::unique_ptr<ResourceNode>& inode = *it_node;
 
   if (is_directory()) {
-    auto* dir = reinterpret_cast<ResourceDirectory*>(this);
+    auto* dir = static_cast<ResourceDirectory*>(this);
     if (inode->has_name()) {
       dir->numberof_name_entries(dir->numberof_name_entries() - 1);
     } else {
@@ -192,16 +158,11 @@ void ResourceNode::delete_child(const ResourceNode& node) {
   childs_.erase(it_node);
 }
 
-void ResourceNode::id(uint32_t id) {
-  id_ = id;
-}
-
 void ResourceNode::name(const std::string& name) {
-  this->name(u8tou16(name));
-}
-
-void ResourceNode::name(const std::u16string& name) {
-  name_ = name;
+  if (auto res = u8tou16(name)) {
+    return this->name(std::move(*res));
+  }
+  LIEF_WARN("{} can't be converted to a UTF-16 string", name);
 }
 
 
@@ -231,19 +192,6 @@ ResourceNode::childs_t::iterator ResourceNode::insert_child(std::unique_ptr<Reso
 
 void ResourceNode::accept(Visitor& visitor) const {
   visitor.visit(*this);
-}
-
-bool ResourceNode::operator==(const ResourceNode& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool ResourceNode::operator!=(const ResourceNode& rhs) const {
-  return !(*this == rhs);
 }
 
 std::ostream& operator<<(std::ostream& os, const ResourceNode& node) {

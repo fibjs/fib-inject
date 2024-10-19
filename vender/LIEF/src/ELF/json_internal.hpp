@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_JSON_INTERNAL_H_
-#define LIEF_ELF_JSON_INTERNAL_H_
+#ifndef LIEF_ELF_JSON_INTERNAL_H
+#define LIEF_ELF_JSON_INTERNAL_H
 
 #include "LIEF/visibility.h"
 #include "visitors/json.hpp"
@@ -23,7 +23,7 @@
 namespace LIEF {
 namespace ELF {
 
-class AndroidNote;
+class AndroidIdent;
 class Binary;
 class CoreAuxv;
 class CoreFile;
@@ -42,6 +42,7 @@ class Header;
 class Note;
 class NoteAbi;
 class NoteDetails;
+class NoteGnuProperty;
 class Relocation;
 class Section;
 class Segment;
@@ -80,7 +81,9 @@ class JsonVisitor : public LIEF::JsonVisitor {
   void visit(const SymbolVersionDefinition& svd)    override;
   void visit(const Note& note)                      override;
   void visit(const NoteAbi& note)                   override;
-  void visit(const NoteDetails& details)            override;
+  void visit(const NoteGnuProperty& note)           override;
+  void visit(const QNXStack& note)                  override;
+  void visit(const AndroidIdent& note)              override;
   void visit(const CorePrPsInfo& pinfo)             override;
   void visit(const CorePrStatus& pstatus)           override;
   void visit(const CoreAuxv& auxv)                  override;

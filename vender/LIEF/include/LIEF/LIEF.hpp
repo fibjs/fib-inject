@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MAIN_HEADER_H_
-#define LIEF_MAIN_HEADER_H_
+#ifndef LIEF_MAIN_HEADER_H
+#define LIEF_MAIN_HEADER_H
 #include <LIEF/config.h>
 
 #include <LIEF/Abstract.hpp>
@@ -27,8 +27,11 @@
 #include <LIEF/PE.hpp>
 #include <LIEF/MachO.hpp>
 #include <LIEF/DWARF.hpp>
+#include <LIEF/PDB.hpp>
+#include <LIEF/ObjC.hpp>
 #include <LIEF/logging.hpp>
 #include <LIEF/platforms.hpp>
+#include <LIEF/debug_loc.hpp>
 
 
 #endif

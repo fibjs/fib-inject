@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,7 @@
 #ifndef C_LIEF_MACHO_BINARY_H_
 #define C_LIEF_MACHO_BINARY_H_
 
-/** @defgroup macho_binary_c_api Binary
- *  @ingroup macho_c_api
- *  @addtogroup macho_binary_c_api
- *  @brief Binary C API
- *
- *  @{
- */
-
-#include <stddef.h>
+#include <stdint.h>
 
 #include "LIEF/visibility.h"
 
@@ -33,7 +25,6 @@
 #include "LIEF/MachO/Symbol.h"
 #include "LIEF/MachO/Section.h"
 #include "LIEF/MachO/Segment.h"
-#include "LIEF/MachO/enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +33,6 @@ extern "C" {
 /** @brief LIEF::MachO::Binary C Handler */
 struct Macho_Binary_t {
   void*               handler;
-  const char*         name;
   uint64_t            imagebase;
   Macho_Header_t      header;
   Macho_Command_t**   commands;
@@ -64,5 +54,4 @@ LIEF_API void macho_binaries_destroy(Macho_Binary_t** binaries);
 #endif
 
 
-/** @} */
 #endif

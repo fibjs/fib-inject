@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "LIEF/MachO/ExportInfo.hpp"
-#include "LIEF/MachO/enums.hpp"
 #include "LIEF/iostream.hpp"
 #include "LIEF/BinaryStream/BinaryStream.hpp"
+#include "LIEF/MachO/ExportInfo.hpp"
 
 #include "logging.hpp"
 
 #include "MachO/exports_trie.hpp"
 #include "MachO/TrieNode.hpp"
+
 namespace LIEF {
 namespace MachO {
 void show_trie(std::ostream& output, std::string output_prefix,
@@ -47,9 +47,9 @@ void show_trie(std::ostream& output, std::string output_prefix,
   uint64_t children_offset = stream.pos() + terminal_size;
 
   if (terminal_size != 0) {
-    EXPORT_SYMBOL_FLAGS flags;
+    ExportInfo::FLAGS flags;
     if (auto res = stream.read_uleb128()) {
-      flags = static_cast<EXPORT_SYMBOL_FLAGS>(*res);
+      flags = ExportInfo::FLAGS(*res);
     } else {
       LIEF_ERR("Can't read flags");
       return;
@@ -62,7 +62,7 @@ void show_trie(std::ostream& output, std::string output_prefix,
 
     // REEXPORT
     // ========
-    if (static_cast<uint8_t>(flags & EXPORT_SYMBOL_FLAGS::EXPORT_SYMBOL_FLAGS_REEXPORT) != 0u) {
+    if (is_true(flags & ExportInfo::FLAGS::REEXPORT)) {
       if (auto res = stream.read_uleb128()) {
         ordinal = *res;
       } else {
@@ -88,7 +88,7 @@ void show_trie(std::ostream& output, std::string output_prefix,
 
     // STUB_AND_RESOLVER
     // =================
-    if (static_cast<uint8_t>(flags & EXPORT_SYMBOL_FLAGS::EXPORT_SYMBOL_FLAGS_STUB_AND_RESOLVER) != 0u) {
+    if (is_true(flags & ExportInfo::FLAGS::STUB_AND_RESOLVER)) {
       if (auto res = stream.read_uleb128()) {
         other = *res;
       } else {
@@ -101,12 +101,12 @@ void show_trie(std::ostream& output, std::string output_prefix,
     output << "{";
     output << "addr: " << std::showbase << std::hex << address << ", ";
     output << "flags: " << std::showbase << std::hex << static_cast<uint64_t>(flags);
-    if (static_cast<uint8_t>(flags & EXPORT_SYMBOL_FLAGS::EXPORT_SYMBOL_FLAGS_REEXPORT) != 0u) {
+    if (is_true(flags & ExportInfo::FLAGS::REEXPORT)) {
       output << ", ";
       output << "re-exported from #" << std::dec << ordinal << " - " << imported_name;
     }
 
-    if ((static_cast<uint8_t>(flags & EXPORT_SYMBOL_FLAGS::EXPORT_SYMBOL_FLAGS_STUB_AND_RESOLVER) != 0u) && other > 0) {
+    if (is_true(flags & ExportInfo::FLAGS::STUB_AND_RESOLVER) && other > 0) {
       output << ", ";
       output << "other:" << std::showbase << std::hex << other;
     }
@@ -116,7 +116,7 @@ void show_trie(std::ostream& output, std::string output_prefix,
     //}
 
     output << "}";
-    output << std::endl;
+    output << '\n';
 
   }
   stream.setpos(children_offset);
@@ -149,7 +149,7 @@ void show_trie(std::ostream& output, std::string output_prefix,
       break;
     }
 
-    output << output_prefix << name << "@off." << std::hex << std::showbase << stream.pos() << std::endl;
+    output << output_prefix << name << "@off." << std::hex << std::showbase << stream.pos() << '\n';
 
     size_t current_pos = stream.pos();
     stream.setpos(start + child_node_offet);

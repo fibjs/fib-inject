@@ -1,4 +1,4 @@
-/* Copyright 2021 - 2022 R. Thomas
+/* Copyright 2021 - 2024 R. Thomas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,11 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "LIEF/BinaryStream/Convert.hpp"
-#include "LIEF/BinaryStream/BinaryStream.hpp"
-#include "LIEF/PE/LoadConfigurations.hpp"
-#include "PE/Structures.hpp"
-
 namespace LIEF {
 namespace Convert {
   // TODO: Implement endian convert

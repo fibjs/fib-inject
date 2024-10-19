@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,8 +76,8 @@ void JsonVisitor::visit(const Header& header) {
 
   node_["keys_values"] = std::vector<json>{};
   for (const auto& key_val : header.key_values()) {
-    std::string k = to_string(key_val.first);
-    node_["keys_values"].emplace_back(std::make_pair(k, key_val.second));
+    std::string k = to_string(key_val.key);
+    node_["keys_values"].emplace_back(std::make_pair(k, *key_val.value));
   }
 }
 

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,45 +16,66 @@
 #ifndef LIEF_MEMORY_STREAM_H
 #define LIEF_MEMORY_STREAM_H
 
-#include <vector>
-#include <string>
+#include <cstdint>
 
+#include "LIEF/errors.hpp"
 #include "LIEF/BinaryStream/BinaryStream.hpp"
 
 namespace LIEF {
 class Binary;
 class MemoryStream : public BinaryStream {
   public:
+  using BinaryStream::p;
+  using BinaryStream::end;
+  using BinaryStream::start;
+
   MemoryStream() = delete;
   MemoryStream(uintptr_t base_address);
-  MemoryStream(uintptr_t base_address, uint64_t size);
+  MemoryStream(uintptr_t base_address, uint64_t size) :
+    BinaryStream(BinaryStream::STREAM_TYPE::MEMORY),
+    baseaddr_(base_address),
+    size_(size)
+  {}
 
   MemoryStream(const MemoryStream&) = delete;
   MemoryStream& operator=(const MemoryStream&) = delete;
 
-  MemoryStream(MemoryStream&&);
-  MemoryStream& operator=(MemoryStream&&);
+  MemoryStream(MemoryStream&&) noexcept = default;
+  MemoryStream& operator=(MemoryStream&&) noexcept = default;
 
-  inline uintptr_t base_address() const {
+  uintptr_t base_address() const {
     return this->baseaddr_;
   }
 
-  inline uint64_t end() const {
-    return this->baseaddr_ + this->size_;
+  const uint8_t* p() const override {
+    return start() + pos();
   }
 
-  inline void binary(Binary& bin) {
+  const uint8_t* start() const override {
+    return reinterpret_cast<const uint8_t*>(baseaddr_);
+  }
+
+  const uint8_t* end() const override {
+    return start() + size_;
+  }
+
+  void binary(Binary& bin) {
     this->binary_ = &bin;
   }
 
-  inline Binary* binary() {
+  Binary* binary() {
     return this->binary_;
   }
 
-  uint64_t size() const override;
-  ~MemoryStream() override;
+  uint64_t size() const override {
+    return size_;
+  }
 
-  static bool classof(const BinaryStream& stream);
+  ~MemoryStream() override = default;
+
+  static bool classof(const BinaryStream& stream) {
+    return stream.type() == BinaryStream::STREAM_TYPE::MEMORY;
+  }
 
   protected:
   result<const void*> read_at(uint64_t offset, uint64_t size) const override;

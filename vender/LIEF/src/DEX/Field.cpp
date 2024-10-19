@@ -1,4 +1,4 @@
-/* Copyright 2021 - 2022 R. Thomas
+/* Copyright 2021 - 2024 R. Thomas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include "LIEF/DEX/hash.hpp"
 #include "LIEF/DEX/enums.hpp"
 #include "LIEF/DEX/EnumToString.hpp"
+#include "LIEF/DEX/Method.hpp"
 
 #include <numeric>
 #include <utility>
@@ -93,18 +94,7 @@ void Field::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool Field::operator==(const Field& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Field::operator!=(const Field& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Field& field) {
   std::string pretty_cls_name = field.cls()->fullname();

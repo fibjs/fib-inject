@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_PE_EXPORT_ENTRY_H_
-#define LIEF_PE_EXPORT_ENTRY_H_
+#ifndef LIEF_PE_EXPORT_ENTRY_H
+#define LIEF_PE_EXPORT_ENTRY_H
 
 #include <string>
-#include <iostream>
+#include <ostream>
 
 #include "LIEF/Object.hpp"
 #include "LIEF/visibility.h"
@@ -40,48 +40,69 @@ class LIEF_API ExportEntry : public LIEF::Symbol {
     std::string library;
     std::string function;
 
-    operator bool() const;
+    operator bool() const {
+      return !library.empty() || !function.empty();
+    }
 
     LIEF_API friend std::ostream& operator<<(std::ostream& os, const forward_information_t& info);
   };
 
   public:
-  ExportEntry();
+  ExportEntry() = default;
   ExportEntry(uint32_t address, bool is_extern,
               uint16_t ordinal, uint32_t function_rva);
-  ExportEntry(const ExportEntry&);
-  ExportEntry& operator=(const ExportEntry&);
-  virtual ~ExportEntry();
+  ExportEntry(const ExportEntry&) = default;
+  ExportEntry& operator=(const ExportEntry&) = default;
+  ~ExportEntry() override = default;
 
-  uint16_t           ordinal() const;
-  uint32_t           address() const;
-  bool               is_extern() const;
-  bool               is_forwarded() const;
-  forward_information_t forward_information() const;
+  uint16_t ordinal() const {
+    return ordinal_;
+  }
+  uint32_t address() const {
+    return address_;
+  }
+  bool is_extern() const {
+    return is_extern_;
+  }
+  bool is_forwarded() const {
+    return forward_info_;
+  }
 
-  uint32_t function_rva() const;
+  forward_information_t forward_information() const {
+    return is_forwarded() ? forward_info_ : forward_information_t{};
+  }
 
-  void ordinal(uint16_t ordinal);
-  void address(uint32_t address);
-  void is_extern(bool is_extern);
+  uint32_t function_rva() const {
+    return function_rva_;
+  }
 
-  inline uint64_t value() const override {
+  void ordinal(uint16_t ordinal) {
+    ordinal_ = ordinal;
+  }
+
+  void address(uint32_t address) {
+    address_ = address;
+  }
+
+  void is_extern(bool is_extern) {
+    is_extern_ = is_extern;
+  }
+
+  uint64_t value() const override {
     return address();
   }
 
-  inline void value(uint64_t value) override {
+  void value(uint64_t value) override {
     address(static_cast<uint32_t>(value));
   }
 
-  inline void set_forward_info(std::string lib, std::string function)  {
+  void set_forward_info(std::string lib, std::string function)  {
     forward_info_.library =  std::move(lib);
     forward_info_.function = std::move(function);
   }
 
   void accept(Visitor& visitor) const override;
 
-  bool operator==(const ExportEntry& rhs) const;
-  bool operator!=(const ExportEntry& rhs) const;
 
   LIEF_API friend std::ostream& operator<<(std::ostream& os, const ExportEntry& exportEntry);
 
@@ -98,4 +119,4 @@ class LIEF_API ExportEntry : public LIEF::Symbol {
 }
 }
 
-#endif /* PE_EXPORTENTRY_H_ */
+#endif /* PE_EXPORTENTRY_H */

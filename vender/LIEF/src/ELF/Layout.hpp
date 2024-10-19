@@ -1,4 +1,4 @@
-/* Copyright 2021 - 2022 R. Thomas
+/* Copyright 2021 - 2024 R. Thomas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,42 +12,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_LAYOUT_H_
-#define LIEF_ELF_LAYOUT_H_
+#ifndef LIEF_ELF_LAYOUT_H
+#define LIEF_ELF_LAYOUT_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <unordered_map>
 #include <string>
 #include <vector>
+
 namespace LIEF {
 namespace ELF {
 class Section;
 class Binary;
 class Layout {
   public:
-  Layout(Binary& bin);
+  Layout(Binary& bin) :
+    binary_(&bin)
+  {}
 
-  inline virtual const std::unordered_map<std::string, size_t>& shstr_map() const {
+  virtual const std::unordered_map<std::string, size_t>& shstr_map() const {
     return shstr_name_map_;
   }
 
-  inline virtual const std::unordered_map<std::string, size_t>& strtab_map() const {
+  virtual const std::unordered_map<std::string, size_t>& strtab_map() const {
     return strtab_name_map_;
   }
 
-  inline virtual const std::vector<uint8_t>& raw_shstr() const {
+  virtual const std::vector<uint8_t>& raw_shstr() const {
     return raw_shstrtab_;
   }
 
-  inline virtual const std::vector<uint8_t>& raw_strtab() const {
+  virtual const std::vector<uint8_t>& raw_strtab() const {
     return raw_strtab_;
   }
 
-  inline void set_strtab_section(Section& section) {
+  void set_strtab_section(Section& section) {
     strtab_section_ = &section;
   }
 
-  inline void set_dyn_sym_idx(int32_t val) {
+  void set_dyn_sym_idx(int32_t val) {
     new_symndx_ = val;
   }
 
@@ -55,7 +58,7 @@ class Layout {
   size_t section_strtab_size();
   size_t section_shstr_size();
 
-  virtual ~Layout();
+  virtual ~Layout() = default;
   Layout() = delete;
 
   protected:

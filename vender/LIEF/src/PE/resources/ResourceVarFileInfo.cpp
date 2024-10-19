@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <numeric>
 
 #include "LIEF/PE/hash.hpp"
+#include "logging.hpp"
 
 #include "LIEF/utils.hpp"
 #include "LIEF/PE/EnumToString.hpp"
@@ -28,73 +29,30 @@
 namespace LIEF {
 namespace PE {
 
-ResourceVarFileInfo::ResourceVarFileInfo(const ResourceVarFileInfo&) = default;
-ResourceVarFileInfo& ResourceVarFileInfo::operator=(const ResourceVarFileInfo&) = default;
-ResourceVarFileInfo::~ResourceVarFileInfo() = default;
-
-
 ResourceVarFileInfo::ResourceVarFileInfo(uint16_t type, std::u16string key) :
   type_{type},
   key_{std::move(key)}
 {}
 
 ResourceVarFileInfo::ResourceVarFileInfo() :
-  key_{u8tou16("VarFileInfo")}
+  key_{*u8tou16("VarFileInfo")}
 {}
 
 
-uint16_t ResourceVarFileInfo::type() const {
-  return type_;
-}
-
-const std::u16string& ResourceVarFileInfo::key() const {
-  return key_;
-}
-
-const std::vector<uint32_t>& ResourceVarFileInfo::translations() const {
-  return translations_;
-}
-
-void ResourceVarFileInfo::type(uint16_t type) {
-  type_ = type;
-}
-
-void ResourceVarFileInfo::key(const std::u16string& key) {
-  key_ = key;
-}
-
 void ResourceVarFileInfo::key(const std::string& key) {
-  this->key(u8tou16(key));
+  if (auto res = u8tou16(key)) {
+    return this->key(std::move(*res));
+  }
+  LIEF_WARN("{} can't be converted to a UTF-16 string", key);
 }
 
-std::vector<uint32_t>& ResourceVarFileInfo::translations() {
-  return const_cast<std::vector<uint32_t>&>(static_cast<const ResourceVarFileInfo*>(this)->translations());
-}
-
-void ResourceVarFileInfo::translations(const std::vector<uint32_t>& translations) {
-  translations_ = translations;
-}
 
 void ResourceVarFileInfo::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
 
-bool ResourceVarFileInfo::operator==(const ResourceVarFileInfo& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool ResourceVarFileInfo::operator!=(const ResourceVarFileInfo& rhs) const {
-  return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& os, const ResourceVarFileInfo& entry) {
-
   std::string translation_str = std::accumulate(
      std::begin(entry.translations()), std::end(entry.translations()), std::string{},
      [] (const std::string& a, uint32_t t) {
@@ -103,17 +61,17 @@ std::ostream& operator<<(std::ostream& os, const ResourceVarFileInfo& entry) {
        uint16_t msb = t >> 16;
        auto cp = static_cast<CODE_PAGES>(msb);
 
-       auto lang = static_cast<RESOURCE_LANGS>(lsb & 0x3ff);
-       RESOURCE_SUBLANGS sublang = ResourcesManager::sub_lang(lang, (lsb >> 10));
+       uint32_t lang = ResourcesManager::lang_from_id(lsb);
+       uint32_t sublang = ResourcesManager::sublang_from_id(lsb);
 
-       ss << to_string(cp) << "/" << to_string(lang) << "/" << to_string(sublang);
+       ss << to_string(cp) << "/" << lang << "/" << sublang;
        return a.empty() ? ss.str() : a + " - " + ss.str();
      });
 
   os << std::hex << std::left;
-  os << std::setw(14) << std::setfill(' ') << "type:"          << entry.type()         << std::endl;
-  os << std::setw(14) << std::setfill(' ') << "key:"           << u16tou8(entry.key()) << std::endl;
-  os << std::setw(14) << std::setfill(' ') << "Translations:"  << translation_str      << std::endl;
+  os << std::setw(14) << std::setfill(' ') << "type:"          << entry.type()         << '\n';
+  os << std::setw(14) << std::setfill(' ') << "key:"           << u16tou8(entry.key()) << '\n';
+  os << std::setw(14) << std::setfill(' ') << "Translations:"  << translation_str      << '\n';
 
   return os;
 }

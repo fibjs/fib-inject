@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ABSTRACT_SECTION_H_
-#define LIEF_ABSTRACT_SECTION_H_
+#ifndef LIEF_ABSTRACT_SECTION_H
+#define LIEF_ABSTRACT_SECTION_H
 
 #include <string>
 #include <vector>
-#include <iostream>
+#include <ostream>
 
-#include "LIEF/types.hpp"
 #include "LIEF/span.hpp"
 #include "LIEF/Object.hpp"
 #include "LIEF/visibility.h"
@@ -31,45 +30,67 @@ class LIEF_API Section : public Object {
   public:
   static constexpr size_t npos = -1;
 
-  Section();
-  Section(std::string name);
+  Section() = default;
+  Section(std::string name) :
+    name_(std::move(name))
+  {}
 
-  virtual ~Section();
+  ~Section() override = default;
 
-  Section& operator=(const Section&);
-  Section(const Section&);
+  Section& operator=(const Section&) = default;
+  Section(const Section&) = default;
 
   //! section's name
-  virtual std::string name() const;
+  virtual std::string name() const {
+    return name_.c_str();
+  }
 
   //! Return the **complete** section's name which might
   //! trailing (``0``) bytes
-  virtual const std::string& fullname() const;
+  virtual const std::string& fullname() const {
+    return name_;
+  }
 
   //!  section's content
-  virtual span<const uint8_t> content() const;
+  virtual span<const uint8_t> content() const {
+    return {};
+  }
 
   //! Change the section size
-  virtual void size(uint64_t size);
+  virtual void size(uint64_t size) {
+    size_ = size;
+  }
 
   //! section's size (size in the binary, not the virtual size)
-  virtual uint64_t size() const;
+  virtual uint64_t size() const {
+    return size_;
+  }
 
   //! Offset in the binary
-  virtual uint64_t offset() const;
+  virtual uint64_t offset() const {
+    return offset_;
+  }
 
   //! Address where the section should be mapped
-  virtual uint64_t virtual_address() const;
+  virtual uint64_t virtual_address() const {
+    return virtual_address_;
+  }
 
-  virtual void virtual_address(uint64_t virtual_address);
+  virtual void virtual_address(uint64_t virtual_address) {
+    virtual_address_ = virtual_address;
+  }
 
   //! Change the section's name
-  virtual void name(const std::string& name);
+  virtual void name(std::string name) {
+    name_ = std::move(name);
+  }
 
   //! Change section content
-  virtual void content(const std::vector<uint8_t>& data);
+  virtual void content(const std::vector<uint8_t>&) {}
 
-  virtual void offset(uint64_t offset);
+  virtual void offset(uint64_t offset) {
+    offset_ = offset;
+  }
 
   //! Section's entropy
   double entropy() const;
@@ -92,8 +113,6 @@ class LIEF_API Section : public Object {
   //! @brief Method so that the ``visitor`` can visit us
   void accept(Visitor& visitor) const override;
 
-  bool operator==(const Section& rhs) const;
-  bool operator!=(const Section& rhs) const;
 
   LIEF_API friend std::ostream& operator<<(std::ostream& os, const Section& entry);
 
@@ -106,8 +125,6 @@ class LIEF_API Section : public Object {
   private:
   template<typename T>
   std::vector<size_t> search_all_(const T& v) const;
-
-
 };
 }
 

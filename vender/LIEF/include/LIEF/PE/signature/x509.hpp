@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_PE_X509_H_
-#define LIEF_PE_X509_H_
+#ifndef LIEF_PE_X509_H
+#define LIEF_PE_X509_H
 #include <array>
 #include <memory>
+#include <vector>
 
 #include "LIEF/Object.hpp"
 #include "LIEF/visibility.h"
@@ -67,7 +68,7 @@ class LIEF_API x509 : public Object {
   static bool time_is_future(const date_t& from);
 
   //! Public key scheme
-  enum class KEY_TYPES  {
+  enum class KEY_TYPES : uint32_t {
     NONE = 0,    ///< Unknown scheme
     RSA,         ///< RSA Scheme
     ECKEY,       ///< Elliptic-curve scheme
@@ -80,7 +81,7 @@ class LIEF_API x509 : public Object {
   //! Mirror of mbedtls's X509 Verify codes: MBEDTLS_X509_XX
   //!
   //! It must be sync with include/mbedtls/x509.h
-  enum class VERIFICATION_FLAGS {
+  enum class VERIFICATION_FLAGS : uint32_t {
     OK                     = 0,       /**< The verification succeed  */
     BADCERT_EXPIRED        = 1 << 0,  /**< The certificate validity has expired. */
     BADCERT_REVOKED        = 1 << 1,  /**< The certificate has been revoked (is on a CRL). */
@@ -105,7 +106,7 @@ class LIEF_API x509 : public Object {
   };
 
   //! Key usage as defined in [RFC #5280 - section-4.2.1.3](https://tools.ietf.org/html/rfc5280#section-4.2.1.3)
-  enum class KEY_USAGE {
+  enum class KEY_USAGE : uint32_t {
     DIGITAL_SIGNATURE = 0, /**< The key is used for digital signature */
     NON_REPUDIATION,       /**< The key is used for digital signature AND to protects against falsely denying some action */
     KEY_ENCIPHERMENT,      /**< The key is used for enciphering private or secret keys */
@@ -180,7 +181,7 @@ class LIEF_API x509 : public Object {
 
   void accept(Visitor& visitor) const override;
 
-  virtual ~x509();
+  ~x509() override;
 
   LIEF_API friend std::ostream& operator<<(std::ostream& os, const x509& x509_cert);
 

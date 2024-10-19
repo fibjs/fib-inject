@@ -6,15 +6,13 @@
 
 
 void print_binary(Macho_Binary_t* binary) {
-  fprintf(stdout, "Binary Name: %s\n", binary->name);
-
   Macho_Header_t header = binary->header;
   fprintf(stdout, "Header\n");
   fprintf(stdout, "========\n");
   fprintf(stdout, "Magic: 0x%" PRIx32 "\n",              header.magic);
-  fprintf(stdout, "CPU Type: %s\n",                      CPU_TYPES_to_string(header.cpu_type));
+  fprintf(stdout, "CPU Type: %d\n",                      header.cpu_type);
   fprintf(stdout, "CPU SubType: 0x%" PRIx32 "\n",        header.cpu_subtype);
-  fprintf(stdout, "File type: %s\n",                     FILE_TYPES_to_string(header.file_type));
+  fprintf(stdout, "File type: %d\n",                     header.file_type);
   fprintf(stdout, "Number of commands: 0x%" PRIx32 "\n", header.nb_cmds);
   fprintf(stdout, "Commands size: 0x%" PRIx32 "\n",      header.sizeof_cmds);
   fprintf(stdout, "flags: 0x%" PRIx32 "\n",              header.flags);
@@ -23,14 +21,15 @@ void print_binary(Macho_Binary_t* binary) {
   fprintf(stdout, "Commands\n");
   fprintf(stdout, "========\n");
   Macho_Command_t** commands = binary->commands;
-  for (size_t i = 0; commands[i] != NULL; ++i) {
+  size_t i = 0;
+  for (i = 0; commands[i] != NULL; ++i) {
     Macho_Command_t* command = commands[i];
     fprintf(stdout, ""
-        "%-20s "
+        "%d "
         "0x%06" PRIx32 " "
         "0x%06" PRIx32 " "
         "\n",
-        LOAD_COMMAND_TYPES_to_string(command->command),
+        command->command,
         command->size,
         command->offset
         );
@@ -43,7 +42,7 @@ void print_binary(Macho_Binary_t* binary) {
   fprintf(stdout, "Segments\n");
   fprintf(stdout, "========\n");
   Macho_Segment_t** segments = binary->segments;
-  for (size_t i = 0; segments[i] != NULL; ++i) {
+  for (i = 0; segments[i] != NULL; ++i) {
     Macho_Segment_t* segment = segments[i];
     fprintf(stdout, ""
         "%-20s "
@@ -77,7 +76,7 @@ void print_binary(Macho_Binary_t* binary) {
   fprintf(stdout, "Sections\n");
   fprintf(stdout, "========\n");
   Macho_Section_t** sections = binary->sections;
-  for (size_t i = 0; sections[i] != NULL; ++i) {
+  for (i = 0; sections[i] != NULL; ++i) {
     Macho_Section_t* section = sections[i];
     fprintf(stdout, ""
         "%-20s "
@@ -85,7 +84,7 @@ void print_binary(Macho_Binary_t* binary) {
         "0x%06" PRIx32 " "
         "0x%06" PRIx32 " "
         "0x%06" PRIx32 " "
-        "%-30s "
+        "%d "
         "0x%02" PRIx32 " "
         "0x%02" PRIx32 " "
         "0x%02" PRIx32 " "
@@ -99,7 +98,7 @@ void print_binary(Macho_Binary_t* binary) {
         section->relocation_offset,
         section->numberof_relocations,
         section->flags,
-        MACHO_SECTION_TYPES_to_string(section->type),
+        section->type,
         section->reserved1,
         section->reserved2,
         section->reserved3,
@@ -117,7 +116,7 @@ void print_binary(Macho_Binary_t* binary) {
   fprintf(stdout, "Symbols\n");
   fprintf(stdout, "=======\n");
   Macho_Symbol_t** symbols = binary->symbols;
-  for (size_t i = 0; symbols[i] != NULL; ++i) {
+  for (i = 0; symbols[i] != NULL; ++i) {
     Macho_Symbol_t* symbol = symbols[i];
     fprintf(stdout, ""
         "%-30s "
@@ -146,6 +145,11 @@ int main(int argc, char **argv) {
   }
 
   Macho_Binary_t** macho_binaries = macho_parse(argv[1]);
+
+  if (macho_binaries == NULL) {
+    return EXIT_FAILURE;
+  }
+
   for (idx = 0; macho_binaries[idx] != NULL; ++idx) {
     print_binary(macho_binaries[idx]);
   }

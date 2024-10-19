@@ -1,4 +1,4 @@
-/* Copyright 2021 - 2022 R. Thomas
+/* Copyright 2021 - 2024 R. Thomas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_DEX_FIELD_H_
-#define LIEF_DEX_FIELD_H_
+#ifndef LIEF_DEX_FIELD_H
+#define LIEF_DEX_FIELD_H
 
 #include <climits>
+#include <cstdint>
 
 #include "LIEF/DEX/enums.hpp"
 
@@ -71,12 +72,10 @@ class LIEF_API Field : public Object {
   //! ACCESS_FLAGS as a list
   access_flags_list_t access_flags() const;
 
-  bool operator==(const Field& rhs) const;
-  bool operator!=(const Field& rhs) const;
 
   LIEF_API friend std::ostream& operator<<(std::ostream& os, const Field& mtd);
 
-  virtual ~Field();
+  ~Field() override;
 
   private:
   void set_static(bool v);

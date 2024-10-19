@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//
-// Description
-// ===========
-// This program shows how to use the LIEF's PE Builder API.
-// It takes a PE binary as input and write the reconstructed binary in the file
-// given in the second argument.
+
 
 #include <iostream>
 #include <memory>
-#include <fstream>
-#include <algorithm>
-#include <iterator>
-
 #include <LIEF/PE.hpp>
 
 using namespace LIEF::PE;
@@ -47,7 +38,7 @@ int main(int argc, char **argv) {
 
   builder.build();
   builder.write(argv[2]);
-  std::cout << binary->name() << '\n';
+  std::cout << argv[1] << '\n';
 
   return 0;
 }

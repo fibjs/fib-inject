@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 #include <algorithm>
-#include <fstream>
 #include <iterator>
-#include <exception>
-#include <string>
-#include <numeric>
-#include <iomanip>
-#include <sstream>
-#include <string>
 
 #include "logging.hpp"
 #include "mbedtls/md5.h"
-
-#include "LIEF/exception.hpp"
 
 #include "LIEF/PE/utils.hpp"
 #define LIEF_PE_FORCE_UNDEF
@@ -34,18 +25,17 @@
 #include "LIEF/PE/Binary.hpp"
 #include "LIEF/PE/Import.hpp"
 #include "LIEF/PE/ImportEntry.hpp"
-#include "LIEF/BinaryStream/VectorStream.hpp"
 #include "LIEF/BinaryStream/SpanStream.hpp"
 #include "LIEF/BinaryStream/FileStream.hpp"
 #include "PE/Structures.hpp"
 
 #include "LIEF/utils.hpp"
 
-
 #include "utils/ordinals_lookup_tables/libraries_table.hpp"
 #include "utils/ordinals_lookup_tables_std/libraries_table.hpp"
 
 #include "hash_stream.hpp"
+#include "internal_utils.hpp"
 
 namespace LIEF {
 namespace PE {
@@ -99,7 +89,7 @@ result<PE_TYPE> get_type_from_stream(BinaryStream& stream) {
   auto dos_hdr = stream.read<details::pe_dos_header>();
   if (!dos_hdr) {
     LIEF_ERR("Can't read the DOS Header structure");
-    return dos_hdr.error();
+    return make_error_code(dos_hdr.error());
   }
   stream.setpos(dos_hdr->AddressOfNewExeHeader);
   if (!stream.can_read<details::pe_header>()) {
@@ -110,7 +100,7 @@ result<PE_TYPE> get_type_from_stream(BinaryStream& stream) {
   auto header = stream.read<details::pe_header>();
   if (!header) {
     LIEF_ERR("Can't read the PE header");
-    return header.error();
+    return make_error_code(header.error());
   }
 
   const size_t sizeof_opt_header = header->SizeOfOptionalHeader;
@@ -122,7 +112,7 @@ result<PE_TYPE> get_type_from_stream(BinaryStream& stream) {
   auto opt_hdr = stream.read<details::pe32_optional_header>();
   if (!opt_hdr) {
     LIEF_ERR("Can't read the PE optional header");
-    return opt_hdr.error();
+    return make_error_code(opt_hdr.error());
   }
   const auto type = static_cast<PE_TYPE>(opt_hdr->Magic);
   stream.setpos(cpos); // Restore the original position
@@ -204,7 +194,7 @@ std::string get_imphash_std(const Binary& binary) {
       if (!entries_string.empty()) {
         entries_string += ',';
       }
-      entries_string += name + '.' + funcname;
+      entries_string.append(name).append(".").append(funcname);
     }
     if (!first_entry) {
       lstr += ',';
@@ -247,9 +237,13 @@ std::string get_imphash_lief(const Binary& binary) {
     std::string entries_string;
     for (const ImportEntry& e : resolved.entries()) {
       if (e.is_ordinal()) {
-        entries_string += name_without_ext + ".#" + std::to_string(e.ordinal());
+        entries_string.append(name_without_ext)
+                      .append(".#")
+                      .append(std::to_string(e.ordinal()));
       } else {
-        entries_string += name_without_ext + "." + e.name();
+        entries_string.append(name_without_ext)
+                      .append(".")
+                      .append(e.name());
       }
     }
     import_list += to_lower(entries_string);
@@ -280,6 +274,36 @@ std::string get_imphash(const Binary& binary, IMPHASH_MODE mode) {
 }
 
 result<Import> resolve_ordinals(const Import& import, bool strict, bool use_std) {
+  static const std::unordered_map<std::string, const char* (*)(uint32_t)>
+  ordinals_library_tables =
+  {
+    { "kernel32.dll",   &kernel32_dll_lookup },
+    { "ntdll.dll",      &ntdll_dll_lookup    },
+    { "advapi32.dll",   &advapi32_dll_lookup },
+    { "msvcp110.dll",   &msvcp110_dll_lookup },
+    { "msvcp120.dll",   &msvcp120_dll_lookup },
+    { "msvcr100.dll",   &msvcr100_dll_lookup },
+    { "msvcr110.dll",   &msvcr110_dll_lookup },
+    { "msvcr120.dll",   &msvcr120_dll_lookup },
+    { "user32.dll",     &user32_dll_lookup   },
+    { "comctl32.dll",   &comctl32_dll_lookup },
+    { "ws2_32.dll",     &ws2_32_dll_lookup   },
+    { "shcore.dll",     &shcore_dll_lookup   },
+    { "oleaut32.dll",   &oleaut32_dll_lookup },
+    { "mfc42u.dll",     &mfc42u_dll_lookup   },
+    { "shlwapi.dll",    &shlwapi_dll_lookup  },
+    { "gdi32.dll",      &gdi32_dll_lookup    },
+    { "shell32.dll",    &shell32_dll_lookup  },
+  };
+
+  static const std::unordered_map<std::string, const char* (*)(uint32_t)>
+  imphashstd_ordinals_library_tables =
+  {
+    { "ws2_32.dll",     &ws2_32_dll_lookup   },
+    { "wsock32.dll",    &ws2_32_dll_lookup   },
+    { "oleaut32.dll",   &oleaut32_dll_lookup },
+  };
+
   using ordinal_resolver_t = const char*(*)(uint32_t);
 
   Import::it_const_entries entries = import.entries();
@@ -294,8 +318,8 @@ result<Import> resolve_ordinals(const Import& import, bool strict, bool use_std)
 
   ordinal_resolver_t ordinal_resolver = nullptr;
   if (use_std) {
-    auto it = imphashstd::ordinals_library_tables.find(name);
-    if (it != std::end(imphashstd::ordinals_library_tables)) {
+    auto it = imphashstd_ordinals_library_tables.find(name);
+    if (it != std::end(imphashstd_ordinals_library_tables)) {
       ordinal_resolver = it->second;
     }
   } else {
@@ -316,7 +340,7 @@ result<Import> resolve_ordinals(const Import& import, bool strict, bool use_std)
   Import resolved_import = import;
   for (ImportEntry& entry : resolved_import.entries()) {
     if (entry.is_ordinal()) {
-      LIEF_DEBUG("Dealing with: {}", entry);
+      LIEF_DEBUG("Dealing with: {}", to_string(entry));
       const char* entry_name = ordinal_resolver(static_cast<uint32_t>(entry.ordinal()));
       if (entry_name == nullptr) {
         if (strict) {

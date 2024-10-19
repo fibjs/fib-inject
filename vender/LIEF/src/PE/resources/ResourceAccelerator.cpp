@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  * Copyright 2017 - 2021 K. Nakagawa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <algorithm>
 
-#include "LIEF/exception.hpp"
-#include "LIEF/PE/hash.hpp"
+#include "LIEF/Visitor.hpp"
 #include "LIEF/PE/EnumToString.hpp"
 #include "PE/Structures.hpp"
 
@@ -24,16 +24,6 @@
 
 namespace LIEF {
 namespace PE {
-
-ResourceAccelerator::ResourceAccelerator(const ResourceAccelerator&) = default;
-ResourceAccelerator& ResourceAccelerator::operator=(const ResourceAccelerator&) = default;
-ResourceAccelerator::~ResourceAccelerator() = default;
-
-ResourceAccelerator::ResourceAccelerator() :
-  flags_{0},
-  ansi_{0},
-  id_{0},
-  padding_{0} {}
 
 ResourceAccelerator::ResourceAccelerator(const details::pe_resource_acceltableentry& entry) :
   flags_{entry.fFlags},
@@ -45,28 +35,15 @@ void ResourceAccelerator::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool ResourceAccelerator::operator==(const ResourceAccelerator& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  const auto hash_lhs = Hash::hash(*this);
-  const auto hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool ResourceAccelerator::operator!=(const ResourceAccelerator& rhs) const {
-  return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& os, const ResourceAccelerator& acc) {
   os << "flags: ";
   for (const ACCELERATOR_FLAGS c : acc.flags_list()) {
     os << to_string(c) << " ";
   }
-  os << std::endl;
-  os << "ansi: " << acc.ansi_str() << std::endl;
-  os << std::hex << "id: " << acc.id() << std::endl;
-  os << std::hex << "padding: " << acc.padding() << std::endl;
+  os << '\n';
+  os << "ansi: " << acc.ansi_str() << '\n';
+  os << std::hex << "id: " << acc.id() << '\n';
+  os << std::hex << "padding: " << acc.padding() << '\n';
   return os;
 }
 
@@ -87,22 +64,6 @@ std::set<ACCELERATOR_FLAGS> ResourceAccelerator::flags_list() const {
     }
   );
   return flags_set;
-}
-
-int16_t ResourceAccelerator::flags() const {
-  return flags_;
-}
-
-int16_t ResourceAccelerator::ansi() const {
-  return ansi_;
-}
-
-uint16_t ResourceAccelerator::id() const {
-  return id_;
-}
-
-int16_t ResourceAccelerator::padding() const {
-  return padding_;
 }
 
 }

@@ -8,11 +8,11 @@ def process_crypt_and_hash(path: str, delta: int = 0):
     Test on a regular Mach-O binary that contains rebase fixups
     """
     fat = lief.MachO.parse(path)
-    target = fat.take(lief.MachO.CPU_TYPES.ARM64)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
 
-    assert target.has(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    assert target.has(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS)
 
-    dyld_chained = target.get(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    dyld_chained = target.get(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS)
     assert dyld_chained.fixups_version == 0
     assert dyld_chained.starts_offset ==  32
     assert dyld_chained.imports_offset == 112
@@ -21,7 +21,7 @@ def process_crypt_and_hash(path: str, delta: int = 0):
     assert dyld_chained.imports_format == lief.MachO.DYLD_CHAINED_FORMAT.IMPORT
 
     assert len(dyld_chained.chained_starts_in_segments) == 5
-    assert len(dyld_chained.bindings) == 40
+    assert len(dyld_chained.bindings) == 41
 
     start_in_segment = dyld_chained.chained_starts_in_segments[2]
     assert start_in_segment.offset == 24
@@ -55,11 +55,11 @@ def test_1():
     This sample does not contains rebase fixups
     """
     fat = lief.MachO.parse(get_sample('MachO/8119b2bd6a15b78b5c0bc2245eb63673173cb8fe9e0638f19aea7e68da668696_id.macho'))
-    target = fat.take(lief.MachO.CPU_TYPES.ARM64)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
 
-    assert target.has(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    assert target.has(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS)
 
-    dyld_chained = target.get(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    dyld_chained = target.get(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS)
     assert dyld_chained.fixups_version == 0
     assert dyld_chained.starts_offset ==  32
     assert dyld_chained.imports_offset == 80
@@ -127,11 +127,11 @@ def test_3():
     """
 
     fat = lief.MachO.parse(get_sample('MachO/42d4f6b799d5d3ff88c50d4c6966773d269d19793226724b5e893212091bf737_dyld.macho'))
-    target = fat.take(lief.MachO.CPU_TYPES.x86)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.X86)
 
-    assert target.has(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    assert target.has(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS)
 
-    dyld_chained = target.get(lief.MachO.LOAD_COMMAND_TYPES.DYLD_CHAINED_FIXUPS)
+    dyld_chained: lief.MachO.DyldChainedFixups = target.get(lief.MachO.LoadCommand.TYPE.DYLD_CHAINED_FIXUPS) # type: ignore[assignment]
     assert dyld_chained.fixups_version == 0
     assert dyld_chained.starts_offset ==  32
     assert dyld_chained.imports_offset == 616
@@ -170,14 +170,14 @@ def test_3():
     rebases = start_in_segment.segment.relocations
     assert len(rebases) == 33
 
-    assert (rebases[0].address,  rebases[0].target)  == (0x6C000, 0x45428)
-    assert (rebases[23].address, rebases[23].target) == (0x6C05C, 0)
-    assert (rebases[32].address, rebases[32].target) == (0x6C208, 0x4EEF9)
+    assert (rebases[0].address,  rebases[0].target)  == (0x6C000, 0x45428) # type: ignore[attr-defined]
+    assert (rebases[23].address, rebases[23].target) == (0x6C05C, 0) # type: ignore[attr-defined]
+    assert (rebases[32].address, rebases[32].target) == (0x6C208, 0x4EEF9) # type: ignore[attr-defined]
 
 def test_builder(tmp_path):
     binary_name = "crypt_and_hash"
     fat = lief.MachO.parse(get_sample('MachO/9edfb04c55289c6c682a25211a4b30b927a86fe50b014610d04d6055bd4ac23d_crypt_and_hash.macho'))
-    target = fat.take(lief.MachO.CPU_TYPES.ARM64)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
     output = f"{tmp_path}/{binary_name}.built"
     target.write(output)
 
@@ -195,7 +195,7 @@ def test_builder(tmp_path):
 def test_linkedit_shift(tmp_path):
     binary_name = "crypt_and_hash"
     fat = lief.MachO.parse(get_sample('MachO/9edfb04c55289c6c682a25211a4b30b927a86fe50b014610d04d6055bd4ac23d_crypt_and_hash.macho'))
-    target: lief.MachO.Binary = fat.take(lief.MachO.CPU_TYPES.ARM64)
+    target: lief.MachO.Binary = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
 
     # Shift content
     target.shift_linkedit(0x4000)
@@ -219,7 +219,7 @@ def test_shift(tmp_path):
     DELTA = 0x4000
     binary_name = "crypt_and_hash"
     fat = lief.MachO.parse(get_sample('MachO/9edfb04c55289c6c682a25211a4b30b927a86fe50b014610d04d6055bd4ac23d_crypt_and_hash.macho'))
-    target = fat.take(lief.MachO.CPU_TYPES.ARM64)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
 
     target.shift(DELTA)
 
@@ -236,3 +236,60 @@ def test_shift(tmp_path):
             stdout = proc.stdout.read()
             assert "CAMELLIA-256-CCM*-NO-TAG" in stdout
             assert "AES-128-CCM*-NO-TAG" in stdout
+
+def test_issue_804(tmp_path):
+    fat = lief.MachO.parse(get_sample('MachO/test_issue_804.bin'))
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
+    bindings = target.dyld_chained_fixups.bindings
+
+    assert len(bindings) == 5
+
+    objc_nsobj = set(binding.address for binding in bindings if binding.symbol.name == "_OBJC_METACLASS_$_NSObject")
+    assert objc_nsobj == {0x0100008090, 0x0100008098}
+
+    output = f"{tmp_path}/test_issue_804.built"
+    target.write(output)
+
+    fat = lief.MachO.parse(output)
+    target = fat.take(lief.MachO.Header.CPU_TYPE.ARM64)
+    bindings = target.dyld_chained_fixups.bindings
+
+    assert len(bindings) == 5
+
+    objc_nsobj = set(binding.address for binding in bindings if binding.symbol.name == "_OBJC_METACLASS_$_NSObject")
+    assert objc_nsobj == {0x0100008090, 0x0100008098}
+
+    if is_apple_m1():
+        chmod_exe(output)
+        sign(output)
+        with subprocess.Popen([output], universal_newlines=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as proc:
+            stdout = proc.stdout.read()
+
+
+def test_issue_853(tmp_path):
+    ios14 = lief.MachO.parse(get_sample('MachO/issue_853_classes_14.bin')).at(0)
+
+    relocations = ios14.relocations
+    assert len(relocations) == 31
+    assert all(0 < (r.target - ios14.imagebase) and (r.target - ios14.imagebase) < ios14.imagebase for r in relocations)
+
+    output = f"{tmp_path}/test_issue_853_ios14.bin"
+    ios14.write(output)
+
+    ios14_built = lief.parse(output)
+    assert len(ios14_built.relocations) == 31
+    assert ios14_built.relocations[0].target == 0x100007ea8
+
+    ios15 = lief.MachO.parse(get_sample('MachO/issue_853_classes_15.bin')).at(0)
+
+    relocations = ios15.relocations
+    assert len(relocations) == 31
+    assert all(0 < (r.target - ios15.imagebase) and (r.target - ios15.imagebase) < ios15.imagebase for r in relocations)
+
+    output = f"{tmp_path}/test_issue_853_ios15.bin"
+    ios15.write(output)
+
+    ios15_built = lief.parse(output)
+    assert len(ios15_built.relocations) == 31
+    assert ios15_built.relocations[0].target == 0x100007ea8

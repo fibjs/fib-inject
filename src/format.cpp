@@ -4,21 +4,6 @@
 #include <LIEF/LIEF.hpp>
 #include "LIEF/BinaryStream/SpanStream.hpp"
 
-namespace LIEF {
-namespace ELF {
-    bool is_elf(BinaryStream& stream);
-}
-
-namespace PE {
-    bool is_pe(BinaryStream& stream);
-}
-
-namespace MachO {
-    bool is_macho(BinaryStream& stream);
-}
-
-}
-
 Napi::Value get_executable_format(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();

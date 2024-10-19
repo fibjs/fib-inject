@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 #ifndef LIEF_MACHO_EXPORTS_TRIE_H
 #define LIEF_MACHO_EXPORTS_TRIE_H
-#include <iostream>
+#include <ostream>
 #include <vector>
 #include <string>
 #include <memory>

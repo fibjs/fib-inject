@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ART_STRUCTURES_H_
-#define LIEF_ART_STRUCTURES_H_
-
-#include <cstring>
-#include <tuple>
+#ifndef LIEF_ART_STRUCTURES_H
+#define LIEF_ART_STRUCTURES_H
 
 #include "LIEF/types.hpp"
 #include "LIEF/ART/enums.hpp"

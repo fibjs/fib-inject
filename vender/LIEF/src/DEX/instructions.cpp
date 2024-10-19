@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@
 #include "LIEF/DEX/instructions.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <map>
-#include <climits>
 
 namespace LIEF {
 namespace DEX {
@@ -276,7 +274,7 @@ INST_FORMATS inst_format_from_opcode(OPCODES op) {
 
   auto   it  = size_map.find(op);
   //if (it == std::end(size_map)) {
-  //  std::cout << std::hex << "OP: " << op << std::endl;
+  //  std::cout << std::hex << "OP: " << op << '\n';
   //}
   return it == size_map.end() ? INST_FORMATS::F_00x : it->second;
 }

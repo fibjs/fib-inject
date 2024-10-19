@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_VISITOR_JSONS_H_
-#define LIEF_VISITOR_JSONS_H_
+#ifndef LIEF_VISITOR_JSONS_H
+#define LIEF_VISITOR_JSONS_H
 
-#include "LIEF/config.h"
-
-#include "LIEF/visibility.h"
 #include "LIEF/Visitor.hpp"
 
 #ifndef LIEF_NLOHMANN_JSON_EXTERNAL

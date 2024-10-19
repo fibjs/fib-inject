@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ using namespace LIEF::ELF;
 
 int main(int argc, char **argv) {
 
-  LIEF::logging::set_level(LIEF::logging::LOGGING_LEVEL::LOG_DEBUG);
+  LIEF::logging::set_level(LIEF::logging::LEVEL::DEBUG);
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <ELF binary>" << '\n';
     return EXIT_FAILURE;
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 
   binary->functions();
 
-  std::cout << "Binary: " << binary->name() << '\n';
+  std::cout << "Binary: " << argv[1] << '\n';
   std::cout << "Interpreter: " << binary->interpreter() << '\n';
   std::cout << "== Header ==" << '\n';
   std::cout << binary->header() << '\n';
@@ -60,10 +60,10 @@ int main(int argc, char **argv) {
     std::cout << entry << '\n';
   }
 
-  auto static_symbols = binary->static_symbols();
-  if (static_symbols.size() > 0) {
-    std::cout << "== Static symbols ==" << '\n';
-    for (const Symbol& symbol : static_symbols) {
+  auto symtab_symbols = binary->symtab_symbols();
+  if (symtab_symbols.size() > 0) {
+    std::cout << "== .symtab (debug) symbols ==" << '\n';
+    for (const Symbol& symbol : symtab_symbols) {
       std::cout << symbol << '\n';
     }
   }
@@ -114,26 +114,6 @@ int main(int argc, char **argv) {
       std::cout << note << '\n';
     }
   }
-
-
-
-  //std::cout << "== Symbol Version ==" << '\n';
-  //std::vector<SymbolVersion>* symbolsVersion = binary->get_symbol_version();
-  //for (const auto &symVersion : *symbolsVersion) {
-  //  std::cout << symVersion << '\n';
-  //}
-
-
-  //std::cout << "== Symbols Version Requirement ==" << '\n';
-  //std::vector<SymbolVersionRequirement> *symR = binary->get_symbol_version_requirement();
-  //for (SymbolVersionRequirement &symbolR : *symR) {
-  //  std::cout << symbolR << '\n' << std::endl;
-  //  auto symAux = symbolR.get_auxiliary_symbols();
-  //  for (auto &symbolAux : symAux) {
-  //    std::cout << *symbolAux << '\n';
-  //  }
-  //  std::cout << '\n';
-  //}
 
   return 0;
 

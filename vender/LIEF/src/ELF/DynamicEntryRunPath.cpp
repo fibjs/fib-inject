@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,55 +14,14 @@
  * limitations under the License.
  */
 #include "LIEF/ELF/DynamicEntryRunPath.hpp"
+#include "LIEF/Visitor.hpp"
 #include "logging.hpp"
 
-#include <iomanip>
 #include <numeric>
 #include <sstream>
-#include <utility>
 
 namespace LIEF {
 namespace ELF {
-
-
-DynamicEntryRunPath& DynamicEntryRunPath::operator=(const DynamicEntryRunPath&) = default;
-DynamicEntryRunPath::DynamicEntryRunPath(const DynamicEntryRunPath&) = default;
-
-DynamicEntryRunPath::DynamicEntryRunPath() :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RUNPATH, 0}
-{}
-
-DynamicEntryRunPath::DynamicEntryRunPath(std::string runpath) :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RUNPATH, 0},
-  runpath_{std::move(runpath)}
-{}
-
-
-DynamicEntryRunPath::DynamicEntryRunPath(const std::vector<std::string>& paths) :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RUNPATH, 0}
-{
-  this->paths(paths);
-}
-
-
-
-const std::string& DynamicEntryRunPath::name() const {
-  return runpath_;
-}
-
-
-void DynamicEntryRunPath::name(const std::string& name) {
-  runpath_ = name;
-}
-
-const std::string& DynamicEntryRunPath::runpath() const {
-  return name();
-}
-
-void DynamicEntryRunPath::runpath(const std::string& runpath) {
-  name(runpath);
-}
-
 
 std::vector<std::string> DynamicEntryRunPath::paths() const {
   std::stringstream ss;
@@ -117,28 +76,14 @@ DynamicEntryRunPath& DynamicEntryRunPath::insert(size_t pos, const std::string& 
   return *this;
 }
 
-DynamicEntryRunPath& DynamicEntryRunPath::operator+=(const std::string& path) {
-  return append(path);
-}
-
-DynamicEntryRunPath& DynamicEntryRunPath::operator-=(const std::string& path) {
-  return remove(path);
-}
-
 void DynamicEntryRunPath::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool DynamicEntryRunPath::classof(const DynamicEntry* entry) {
-  const DYNAMIC_TAGS tag = entry->tag();
-  return tag == DYNAMIC_TAGS::DT_RUNPATH;
-}
 
 std::ostream& DynamicEntryRunPath::print(std::ostream& os) const {
   DynamicEntry::print(os);
-  os << std::hex
-     << std::left
-     << std::setw(10) << name();
+  os << fmt::format("{:<10}", runpath());
   return os;
 }
 }

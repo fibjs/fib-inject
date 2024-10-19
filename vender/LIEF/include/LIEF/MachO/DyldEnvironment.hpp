@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_DYLD_ENVIROMENT_COMMAND_H_
-#define LIEF_MACHO_DYLD_ENVIROMENT_COMMAND_H_
+#ifndef LIEF_MACHO_DYLD_ENVIROMENT_COMMAND_H
+#define LIEF_MACHO_DYLD_ENVIROMENT_COMMAND_H
 #include <string>
-#include <iostream>
+#include <ostream>
 
-#include "LIEF/types.hpp"
 #include "LIEF/visibility.h"
 
 #include "LIEF/MachO/LoadCommand.hpp"
@@ -30,33 +29,38 @@ namespace details {
 struct dylinker_command;
 }
 
-//! Class that represents a LC_DYLD_ENVIRONMENT which is
+//! Class that represents a `LC_DYLD_ENVIRONMENT` command which is
 //! used by the Mach-O linker/loader to initialize an environment variable
 class LIEF_API DyldEnvironment : public LoadCommand {
   public:
-  DyldEnvironment();
+  DyldEnvironment() = default;
   DyldEnvironment(const details::dylinker_command& cmd);
 
-  DyldEnvironment& operator=(const DyldEnvironment& copy);
-  DyldEnvironment(const DyldEnvironment& copy);
+  DyldEnvironment& operator=(const DyldEnvironment& copy) = default;
+  DyldEnvironment(const DyldEnvironment& copy) = default;
 
-  DyldEnvironment* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<DyldEnvironment>(new DyldEnvironment(*this));
+  }
 
-  virtual ~DyldEnvironment();
+  ~DyldEnvironment() override = default;
 
   std::ostream& print(std::ostream& os) const override;
 
   //! The actual environment variable
-  const std::string& value() const;
+  const std::string& value() const {
+    return value_;
+  }
 
-  void value(const std::string& values);
-
-  bool operator==(const DyldEnvironment& rhs) const;
-  bool operator!=(const DyldEnvironment& rhs) const;
+  void value(std::string value) {
+    value_ = std::move(value);
+  }
 
   void accept(Visitor& visitor) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::DYLD_ENVIRONMENT;
+  }
 
   private:
   std::string value_;

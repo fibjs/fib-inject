@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iterator>
 
-#include "LIEF/exception.hpp"
+
 
 #include "LIEF/PE/hash.hpp"
 
@@ -59,11 +59,11 @@ uint32_t ResourceIcon::id() const {
   return id_;
 }
 
-RESOURCE_LANGS ResourceIcon::lang() const {
+uint32_t ResourceIcon::lang() const {
   return lang_;
 }
 
-RESOURCE_SUBLANGS ResourceIcon::sublang() const {
+uint32_t ResourceIcon::sublang() const {
   return sublang_;
 }
 
@@ -95,7 +95,7 @@ uint32_t ResourceIcon::size() const {
   return pixels_.size();
 }
 
-const std::vector<uint8_t>& ResourceIcon::pixels() const {
+span<const uint8_t> ResourceIcon::pixels() const {
   return pixels_;
 }
 
@@ -103,11 +103,11 @@ void ResourceIcon::id(uint32_t id) {
   id_ = id;
 }
 
-void ResourceIcon::lang(RESOURCE_LANGS lang) {
+void ResourceIcon::lang(uint32_t lang) {
   lang_ = lang;
 }
 
-void ResourceIcon::sublang(RESOURCE_SUBLANGS sublang) {
+void ResourceIcon::sublang(uint32_t sublang) {
   sublang_ = sublang;
 }
 
@@ -157,7 +157,7 @@ void ResourceIcon::save(const std::string& filename) const {
   icon_header.size        = static_cast<uint32_t>(size());
   icon_header.offset      = sizeof(details::pe_resource_icon_dir) + sizeof(details::pe_icon_header);
 
-  const std::vector<uint8_t>& pixels = this->pixels();
+  span<const uint8_t> pixels = this->pixels();
 
   std::copy(
       reinterpret_cast<const uint8_t*>(&dir_header),
@@ -169,10 +169,8 @@ void ResourceIcon::save(const std::string& filename) const {
       reinterpret_cast<const uint8_t*>(&icon_header) + sizeof(details::pe_icon_header),
       icon.data() + sizeof(details::pe_resource_icon_dir));
 
-  std::copy(
-      std::begin(pixels),
-      std::end(pixels),
-      icon.data() + sizeof(details::pe_resource_icon_dir) + sizeof(details::pe_icon_header));
+  std::copy(std::begin(pixels), std::end(pixels),
+            icon.data() + sizeof(details::pe_resource_icon_dir) + sizeof(details::pe_icon_header));
 
 
   std::ofstream output_file{filename, std::ios::out | std::ios::binary | std::ios::trunc};
@@ -186,28 +184,17 @@ void ResourceIcon::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool ResourceIcon::operator==(const ResourceIcon& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool ResourceIcon::operator!=(const ResourceIcon& rhs) const {
-  return !(*this == rhs);
-}
 
 
 std::ostream& operator<<(std::ostream& os, const ResourceIcon& icon) {
-  os << std::setw(33) << std::left << std::setfill(' ') << "ID: "          << std::hex << icon.id()                                                                                       << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Size: "        << std::dec << static_cast<uint32_t>(icon.width()) << "x" << static_cast<uint32_t>(icon.height()) << " pixels" << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Color count: " << std::hex << static_cast<uint32_t>(icon.color_count())                                                       << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Reserved: "    << std::hex << static_cast<uint32_t>(icon.reserved())                                                          << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Planes: "      << std::hex << static_cast<uint32_t>(icon.planes())                                                            << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Bit count: "   << std::hex << static_cast<uint32_t>(icon.bit_count())                                                         << std::endl;
-  os << std::setw(33) << std::left << std::setfill(' ') << "Hash: "        << std::hex << Hash::hash(icon.pixels())                                                                       << std::endl;
+  os << std::setw(33) << std::left << std::setfill(' ') << "ID: "          << std::hex << icon.id()                                                                                       << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Size: "        << std::dec << static_cast<uint32_t>(icon.width()) << "x" << static_cast<uint32_t>(icon.height()) << " pixels" << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Color count: " << std::hex << static_cast<uint32_t>(icon.color_count())                                                       << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Reserved: "    << std::hex << static_cast<uint32_t>(icon.reserved())                                                          << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Planes: "      << std::hex << static_cast<uint32_t>(icon.planes())                                                            << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Bit count: "   << std::hex << static_cast<uint32_t>(icon.bit_count())                                                         << '\n';
+  os << std::setw(33) << std::left << std::setfill(' ') << "Hash: "        << std::hex << Hash::hash(icon.pixels())                                                                       << '\n';
   return os;
 }
 

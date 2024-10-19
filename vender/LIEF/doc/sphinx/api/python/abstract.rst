@@ -12,10 +12,11 @@ Parser
 Binary
 ******
 
+.. lief-inheritance:: lief._lief.Binary
+  :top-classes: lief._lief.Binary
+  :parts: 2
+
 .. autoclass:: lief.Binary
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -23,9 +24,6 @@ Header
 ******
 
 .. autoclass:: lief.Header
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -33,20 +31,22 @@ Header
 Section
 *******
 
+.. lief-inheritance:: lief._lief.Section
+  :top-classes: lief._lief.Section
+  :parts: 2
+
 .. autoclass:: lief.Section
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Symbol
 ******
 
+.. lief-inheritance:: lief._lief.Symbol
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.Symbol
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -54,10 +54,11 @@ Symbol
 Relocation
 **********
 
+.. lief-inheritance:: lief._lief.Relocation
+  :top-classes: lief._lief.Relocation
+  :parts: 2
+
 .. autoclass:: lief.Relocation
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -66,34 +67,16 @@ Function
 ********
 
 .. autoclass:: lief.Function
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 
 Enums
 *****
 
-
-Executable formats
-~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.EXE_FORMATS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
 Object types
 ~~~~~~~~~~~~
 
 .. autoclass:: lief.OBJECT_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -102,9 +85,6 @@ Architectures
 ~~~~~~~~~~~~~
 
 .. autoclass:: lief.ARCHITECTURES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -112,9 +92,6 @@ Modes
 ~~~~~
 
 .. autoclass:: lief.MODES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -122,10 +99,3 @@ Endianness
 ~~~~~~~~~~
 
 .. autoclass:: lief.ENDIANNESS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-
-

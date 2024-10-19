@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_SEGMENT_SPLIT_INFO_H_
-#define LIEF_MACHO_SEGMENT_SPLIT_INFO_H_
-#include <vector>
-#include <iostream>
+#ifndef LIEF_MACHO_SEGMENT_SPLIT_INFO_H
+#define LIEF_MACHO_SEGMENT_SPLIT_INFO_H
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 #include "LIEF/span.hpp"
 
 #include "LIEF/MachO/LoadCommand.hpp"
@@ -33,43 +31,52 @@ namespace details {
 struct linkedit_data_command;
 }
 
-//! Class that represents the LOAD_COMMAND_TYPES::LC_SEGMENT_SPLIT_INFO command
+//! Class that represents the LoadCommand::TYPE::SEGMENT_SPLIT_INFO command
 class LIEF_API SegmentSplitInfo : public LoadCommand {
   friend class BinaryParser;
   friend class LinkEdit;
   public:
-  SegmentSplitInfo();
+  SegmentSplitInfo() = default;
   SegmentSplitInfo(const details::linkedit_data_command& cmd);
 
-  SegmentSplitInfo& operator=(const SegmentSplitInfo& copy);
-  SegmentSplitInfo(const SegmentSplitInfo& copy);
+  SegmentSplitInfo& operator=(const SegmentSplitInfo& copy) = default;
+  SegmentSplitInfo(const SegmentSplitInfo& copy) = default;
 
-  SegmentSplitInfo* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<SegmentSplitInfo>(new SegmentSplitInfo(*this));
+  }
 
-  uint32_t data_offset() const;
-  uint32_t data_size() const;
+  uint32_t data_offset() const {
+    return data_offset_;
+  }
+  uint32_t data_size() const {
+    return data_size_;
+  }
 
-  void data_offset(uint32_t offset);
-  void data_size(uint32_t size);
+  void data_offset(uint32_t offset) {
+    data_offset_ = offset;
+  }
+  void data_size(uint32_t size) {
+    data_size_ = size;
+  }
 
-  inline span<uint8_t> content() {
+  span<uint8_t> content() {
     return content_;
   }
 
-  inline span<const uint8_t> content() const {
+  span<const uint8_t> content() const {
     return content_;
   }
 
-  virtual ~SegmentSplitInfo();
-
-  bool operator==(const SegmentSplitInfo& rhs) const;
-  bool operator!=(const SegmentSplitInfo& rhs) const;
+  ~SegmentSplitInfo() override = default;
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::SEGMENT_SPLIT_INFO;
+  }
 
   private:
   uint32_t data_offset_ = 0;

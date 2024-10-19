@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include "logging.hpp"
 
 #include "third-party/utfcpp.hpp"
-#include "LIEF/exception.hpp"
+
 
 #include "LIEF/PE/Builder.hpp"
 #include "LIEF/PE/ResourceData.hpp"
@@ -202,7 +202,7 @@ ok_error_t Builder::build_relocation() {
   //    reinterpret_cast<uint8_t*>(&relocHeader),
   //    reinterpret_cast<uint8_t*>(&relocHeader) + sizeof(pe_base_relocation_block));
 
-  Section new_relocation_section{".l" + std::to_string(static_cast<uint32_t>(DATA_DIRECTORY::BASE_RELOCATION_TABLE))}; // .l5 -> lief.relocation
+  Section new_relocation_section{".l" + std::to_string(static_cast<uint32_t>(DataDirectory::TYPES::BASE_RELOCATION_TABLE))}; // .l5 -> lief.relocation
   new_relocation_section.characteristics(0x42000040);
   const size_t size_aligned = align(content.size(), binary_->optional_header().file_alignment());
 
@@ -242,7 +242,7 @@ ok_error_t Builder::build_resources() {
   uint32_t offset_name   = headerSize;
   uint32_t offset_data   = headerSize + nameSize;
 
-  Section new_section_rsrc{".l" + std::to_string(static_cast<uint32_t>(DATA_DIRECTORY::RESOURCE_TABLE))};
+  Section new_section_rsrc{".l" + std::to_string(static_cast<uint32_t>(DataDirectory::TYPES::RESOURCE_TABLE))};
   new_section_rsrc.characteristics(0x40000040);
   new_section_rsrc.content(content);
 
@@ -383,7 +383,7 @@ ok_error_t Builder::construct_resources(ResourceNode& node, std::vector<uint8_t>
               content->data() + *offset_header);
 
     *offset_header += sizeof(details::pe_resource_directory_table);
-    const std::vector<uint8_t>& resource_content = rsrc_data.content();
+    span<const uint8_t> resource_content = rsrc_data.content();
 
     std::copy(std::begin(resource_content), std::end(resource_content),
               content->data() + *offset_data);
@@ -417,7 +417,7 @@ ok_error_t Builder::build(const DosHeader& dos_header) {
   std::memset(&raw_dos_header, 0, sizeof(details::pe_dos_header));
 
   raw_dos_header.Magic                     = static_cast<uint16_t>(dos_header.magic());
-  raw_dos_header.UsedBytesInTheLastPage    = static_cast<uint16_t>(dos_header.used_bytes_in_the_last_page());
+  raw_dos_header.UsedBytesInTheLastPage    = static_cast<uint16_t>(dos_header.used_bytes_in_last_page());
   raw_dos_header.FileSizeInPages           = static_cast<uint16_t>(dos_header.file_size_in_pages());
   raw_dos_header.NumberOfRelocationItems   = static_cast<uint16_t>(dos_header.numberof_relocation());
   raw_dos_header.HeaderSizeInParagraphs    = static_cast<uint16_t>(dos_header.header_size_in_paragraphs());
@@ -473,7 +473,8 @@ ok_error_t Builder::build(const Header& bHeader) {
   header.Characteristics       = static_cast<uint16_t>(bHeader.characteristics());
 
   const Header::signature_t& signature = binary_->header_.signature();
-  std::copy(std::begin(signature), std::end(signature), std::begin(header.signature));
+  std::copy(std::begin(signature), std::end(signature),
+            reinterpret_cast<uint8_t*>(&header.signature));
 
   const uint32_t address_next_header = binary_->dos_header().addressof_new_exeheader();
 
@@ -548,13 +549,13 @@ ok_error_t Builder::build(const Section& section) {
 std::ostream& operator<<(std::ostream& os, const Builder& b) {
   os << std::left;
   os << std::boolalpha;
-  os << std::setw(20) << "Build imports:"     << b.build_imports_     << std::endl;
-  os << std::setw(20) << "Patch imports:"     << b.patch_imports_     << std::endl;
-  os << std::setw(20) << "Build relocations:" << b.build_relocations_ << std::endl;
-  os << std::setw(20) << "Build TLS:"         << b.build_tls_         << std::endl;
-  os << std::setw(20) << "Build resources:"   << b.build_resources_   << std::endl;
-  os << std::setw(20) << "Build overlay:"     << b.build_overlay_     << std::endl;
-  os << std::setw(20) << "Build dos stub:"    << b.build_dos_stub_    << std::endl;
+  os << std::setw(20) << "Build imports:"     << b.build_imports_     << '\n';
+  os << std::setw(20) << "Patch imports:"     << b.patch_imports_     << '\n';
+  os << std::setw(20) << "Build relocations:" << b.build_relocations_ << '\n';
+  os << std::setw(20) << "Build TLS:"         << b.build_tls_         << '\n';
+  os << std::setw(20) << "Build resources:"   << b.build_resources_   << '\n';
+  os << std::setw(20) << "Build overlay:"     << b.build_overlay_     << '\n';
+  os << std::setw(20) << "Build dos stub:"    << b.build_dos_stub_    << '\n';
   return os;
 }
 

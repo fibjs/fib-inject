@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ void JsonVisitor::visit(const Binary& binary) {
 void JsonVisitor::visit(const Header& header) {
 
   std::vector<json> flags;
-  for (HEADER_FLAGS f : header.flags_list()) {
+  for (Header::FLAGS f : header.flags_list()) {
     flags.emplace_back(to_string(f));
   }
   node_["magic"]       = to_string(header.magic());
@@ -149,7 +149,6 @@ void JsonVisitor::visit(const SegmentCommand& segment) {
   }
 
   visit(*segment.as<LoadCommand>());
-  node_["name"]              = segment.name();
   node_["virtual_address"]   = segment.virtual_address();
   node_["virtual_size"]      = segment.virtual_size();
   node_["file_size"]         = segment.file_size();
@@ -165,7 +164,7 @@ void JsonVisitor::visit(const SegmentCommand& segment) {
 void JsonVisitor::visit(const Section& section) {
 
   std::vector<json> flags;
-  for (MACHO_SECTION_FLAGS f : section.flags_list()) {
+  for (Section::FLAGS f : section.flags_list()) {
     flags.emplace_back(to_string(f));
   }
   node_["name"]                 = section.name();
@@ -393,6 +392,12 @@ void JsonVisitor::visit(const VersionMin& vmin) {
 
   node_["version"] = vmin.version();
   node_["sdk"]     = vmin.sdk();
+}
+
+void JsonVisitor::visit(const UnknownCommand& ukn) {
+  visit(*ukn.as<LoadCommand>());
+
+  node_["original_command"] = ukn.original_command();
 }
 
 void JsonVisitor::visit(const SegmentSplitInfo& ssi) {

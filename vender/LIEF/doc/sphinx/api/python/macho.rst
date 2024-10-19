@@ -8,9 +8,6 @@ Parser
 .. autofunction:: lief.MachO.parse
 
 .. autoclass:: lief.MachO.ParserConfig
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 .. code-block:: python
 
@@ -26,9 +23,6 @@ FatBinary
 *********
 
 .. autoclass:: lief.MachO.FatBinary
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -39,9 +33,6 @@ Binary
 ******
 
 .. autoclass:: lief.MachO.Binary
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -49,9 +40,6 @@ Header
 ******
 
 .. autoclass:: lief.MachO.Header
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -59,10 +47,11 @@ Header
 Section
 *******
 
+.. lief-inheritance:: lief._lief.MachO.Section
+  :top-classes: lief._lief.Section
+  :parts: 2
+
 .. autoclass:: lief.MachO.Section
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -70,10 +59,11 @@ Section
 SegmentCommand
 **************
 
+.. lief-inheritance:: lief._lief.MachO.SegmentCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.SegmentCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -81,10 +71,11 @@ SegmentCommand
 LoadCommand
 ***********
 
+.. lief-inheritance:: lief._lief.MachO.LoadCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.LoadCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -92,10 +83,11 @@ LoadCommand
 DylibCommand
 ************
 
+.. lief-inheritance:: lief._lief.MachO.DylibCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DylibCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -103,10 +95,11 @@ DylibCommand
 DylinkerCommand
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.DylinkerCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DylinkerCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -114,10 +107,11 @@ DylinkerCommand
 UUIDCommand
 ***********
 
+.. lief-inheritance:: lief._lief.MachO.UUIDCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.UUIDCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 ----------
@@ -126,10 +120,11 @@ UUIDCommand
 MainCommand
 ***********
 
+.. lief-inheritance:: lief._lief.MachO.MainCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.MainCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -137,10 +132,11 @@ MainCommand
 Symbol
 ******
 
+.. lief-inheritance:: lief._lief.MachO.Symbol
+  :top-classes: lief._lief.Symbol
+  :parts: 2
+
 .. autoclass:: lief.MachO.Symbol
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -148,50 +144,59 @@ Symbol
 Symbol Command
 **************
 
+.. lief-inheritance:: lief._lief.MachO.DylinkerCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.SymbolCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Dynamic Symbol Command
 **********************
 
+.. lief-inheritance:: lief._lief.MachO.DynamicSymbolCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
+
 .. autoclass:: lief.MachO.DynamicSymbolCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Dyld Info
 *********
 
+.. lief-inheritance:: lief._lief.MachO.DyldInfo
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
+
 .. autoclass:: lief.MachO.DyldInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Function starts
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.FunctionStarts
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
+
 .. autoclass:: lief.MachO.FunctionStarts
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Source Version
 **************
 
+.. lief-inheritance:: lief._lief.MachO.SourceVersion
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
+
 .. autoclass:: lief.MachO.SourceVersion
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -199,10 +204,11 @@ Source Version
 Version Min
 ***********
 
+.. lief-inheritance:: lief._lief.MachO.VersionMin
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.VersionMin
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -210,10 +216,11 @@ Version Min
 Relocation
 **********
 
+.. lief-inheritance:: lief._lief.MachO.Relocation
+  :top-classes: lief._lief.Relocation
+  :parts: 2
+
 .. autoclass:: lief.MachO.Relocation
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -221,10 +228,11 @@ Relocation
 Relocation Object
 *****************
 
+.. lief-inheritance:: lief._lief.MachO.RelocationObject
+  :top-classes: lief._lief.Relocation
+  :parts: 2
+
 .. autoclass:: lief.MachO.RelocationObject
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -232,20 +240,22 @@ Relocation Object
 Relocation Dyld
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.RelocationDyld
+  :top-classes: lief._lief.Relocation
+  :parts: 2
+
 .. autoclass:: lief.MachO.RelocationDyld
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Relocation Fixup
 ****************
 
+.. lief-inheritance:: lief._lief.MachO.RelocationFixup
+  :top-classes: lief._lief.Relocation
+  :parts: 2
+
 .. autoclass:: lief.MachO.RelocationFixup
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -253,20 +263,22 @@ Relocation Fixup
 Binding Info
 ************
 
+.. lief-inheritance:: lief._lief.MachO.BindingInfo
+  :top-classes: lief._lief.MachO.BindingInfo
+  :parts: 2
+
 .. autoclass:: lief.MachO.BindingInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 Dyld Binding Info
 *****************
 
+.. lief-inheritance:: lief._lief.MachO.DyldBindingInfo
+  :top-classes: lief._lief.MachO.BindingInfo
+  :parts: 2
+
 .. autoclass:: lief.MachO.DyldBindingInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -274,10 +286,11 @@ Dyld Binding Info
 Chained Binding Info
 ********************
 
+.. lief-inheritance:: lief._lief.MachO.ChainedBindingInfo
+  :top-classes: lief._lief.MachO.BindingInfo
+  :parts: 2
+
 .. autoclass:: lief.MachO.ChainedBindingInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -286,9 +299,6 @@ Export Info
 ***********
 
 .. autoclass:: lief.MachO.ExportInfo
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -296,20 +306,22 @@ Export Info
 Thread Command
 **************
 
+.. lief-inheritance:: lief._lief.MachO.ThreadCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.ThreadCommand
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
 RPath Command
 *************
 
+.. lief-inheritance:: lief._lief.MachO.RPathCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.RPathCommand
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
@@ -317,20 +329,22 @@ RPath Command
 Code Signature
 **************
 
+.. lief-inheritance:: lief._lief.MachO.CodeSignature
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.CodeSignature
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Data In Code
 ************
 
+.. lief-inheritance:: lief._lief.MachO.DataInCode
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DataInCode
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
@@ -338,129 +352,149 @@ Data Code Entry
 ***************
 
 .. autoclass:: lief.MachO.DataCodeEntry
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Segment Split Info
 ******************
 
+.. lief-inheritance:: lief._lief.MachO.SegmentSplitInfo
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.SegmentSplitInfo
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Sub Framework
 *************
 
+.. lief-inheritance:: lief._lief.MachO.SubFramework
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.SubFramework
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Dyld Environment
 ****************
 
+.. lief-inheritance:: lief._lief.MachO.DyldEnvironment
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DyldEnvironment
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Encryption Info
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.EncryptionInfo
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.EncryptionInfo
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Build Version
 *************
 
+.. lief-inheritance:: lief._lief.MachO.BuildVersion
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.BuildVersion
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Build Tool Version
 ******************
 
+.. lief-inheritance:: lief._lief.MachO.BuildToolVersion
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.BuildToolVersion
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Fileset Command
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.FilesetCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.FilesetCommand
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 DyldChainedFixups Command
 *************************
 
+.. lief-inheritance:: lief._lief.MachO.DyldChainedFixups
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DyldChainedFixups
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 DyldExportsTrie Command
 ***********************
 
+.. lief-inheritance:: lief._lief.MachO.DyldExportsTrie
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.DyldExportsTrie
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Code Signature Dir Command
 **************************
 
+.. lief-inheritance:: lief._lief.MachO.CodeSignatureDir
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.CodeSignatureDir
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Two Level Hints
 ***************
 
+.. lief-inheritance:: lief._lief.MachO.TwoLevelHints
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.TwoLevelHints
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Linker Optimization Hint
 ************************
 
+.. lief-inheritance:: lief._lief.MachO.LinkerOptHint
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
 .. autoclass:: lief.MachO.LinkerOptHint
-   :members:
-   :inherited-members:
-   :undoc-members:
+
+----------
+
+UnknownCommand
+**************
+
+.. lief-inheritance:: lief._lief.MachO.UnknownCommand
+  :top-classes: lief._lief.MachO.LoadCommand
+  :parts: 2
+
+.. autoclass:: lief.MachO.UnknownCommand
 
 ----------
 
@@ -468,78 +502,16 @@ Builder
 *******
 
 .. autoclass:: lief.MachO.Builder
-   :members:
-   :inherited-members:
-   :undoc-members:
 
 ----------
 
 Enums
 *****
 
-
-CPU_TYPES
-~~~~~~~~~
-
-.. autoclass:: lief.MachO.CPU_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
-FILE_TYPES
-~~~~~~~~~~
-
-.. autoclass:: lief.MachO.FILE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
-HEADER_FLAGS
-~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.HEADER_FLAGS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
-LOAD_COMMAND_TYPES
-~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.LOAD_COMMAND_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
-SECTION_TYPES
-~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.SECTION_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-
 MACHO_TYPES
 ~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.MACHO_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -548,20 +520,13 @@ X86_RELOCATION
 ~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.X86_RELOCATION
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
-
 
 X86_64_RELOCATION
 ~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.X86_64_RELOCATION
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -570,9 +535,6 @@ PPC_RELOCATION
 ~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.PPC_RELOCATION
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -581,9 +543,6 @@ ARM_RELOCATION
 ~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.ARM_RELOCATION
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -591,154 +550,14 @@ ARM64_RELOCATION
 ~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.ARM64_RELOCATION
-  :members:
-  :inherited-members:
-  :undoc-members:
 
-
-----------
-
-RELOCATION_ORIGINS
-~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.RELOCATION_ORIGINS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-REBASE_TYPES
-~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.REBASE_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-
-----------
-
-BINDING_CLASS
-~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.BINDING_CLASS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-REBASE_OPCODES
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.REBASE_OPCODES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-BIND_TYPES
-~~~~~~~~~~
-
-.. autoclass:: lief.MachO.BIND_TYPES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-BIND_SPECIAL_DYLIB
-~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.BIND_SPECIAL_DYLIB
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-BIND_OPCODES
-~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.BIND_OPCODES
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-EXPORT_SYMBOL_KINDS
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.EXPORT_SYMBOL_KINDS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-EXPORT_SYMBOL_FLAGS
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.EXPORT_SYMBOL_FLAGS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-VM_PROTECTIONS
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.VM_PROTECTIONS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-
-----------
-
-SYMBOL_ORIGINS
-~~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.SYMBOL_ORIGINS
-  :members:
-  :inherited-members:
-  :undoc-members:
-
-----------
-
-SECTION_FLAGS
-~~~~~~~~~~~~~
-
-.. autoclass:: lief.MachO.SECTION_FLAGS
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 DYLD_CHAINED_FORMAT
 ~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.DYLD_CHAINED_FORMAT
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 DYLD_CHAINED_PTR_FORMAT
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: lief.MachO.DYLD_CHAINED_PTR_FORMAT
-  :members:
-  :inherited-members:
-  :undoc-members:

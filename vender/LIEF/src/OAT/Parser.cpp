@@ -1,5 +1,5 @@
-/* Copyright 2021 - 2022 R. Thomas
- * Copyright 2021 - 2022 Quarkslab
+/* Copyright 2021 - 2024 R. Thomas
+ * Copyright 2021 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 
 #include "LIEF/OAT/Parser.hpp"
 #include "LIEF/OAT/Binary.hpp"
-#include "LIEF/OAT/Method.hpp"
 #include "LIEF/OAT/utils.hpp"
 
 #include "LIEF/VDEX/utils.hpp"
@@ -44,7 +43,7 @@ std::unique_ptr<Binary> Parser::parse(const std::string& oat_file) {
   }
 
   Parser parser{oat_file};
-  parser.init(oat_file);
+  parser.init();
 
   std::unique_ptr<Binary> oat_binary{static_cast<Binary*>(parser.binary_.release())};
   return oat_binary;
@@ -66,15 +65,15 @@ std::unique_ptr<Binary> Parser::parse(const std::string& oat_file, const std::st
   } else {
     LIEF_WARN("Can't parse the VDEX file '{}'", vdex_file);
   }
-  parser.init(oat_file);
+  parser.init();
   std::unique_ptr<Binary> oat_binary{static_cast<Binary*>(parser.binary_.release())};
   return oat_binary;
 
 }
 
-std::unique_ptr<Binary> Parser::parse(std::vector<uint8_t> data, const std::string& name) {
+std::unique_ptr<Binary> Parser::parse(std::vector<uint8_t> data) {
   Parser parser{std::move(data)};
-  parser.init(name);
+  parser.init();
   std::unique_ptr<Binary> oat_binary{static_cast<Binary*>(parser.binary_.release())};
   return oat_binary;
 }
@@ -83,7 +82,7 @@ std::unique_ptr<Binary> Parser::parse(std::vector<uint8_t> data, const std::stri
 Parser::Parser(std::vector<uint8_t> data) {
   stream_    = std::make_unique<VectorStream>(std::move(data));
   binary_    = std::unique_ptr<Binary>(new Binary{});
-  count_mtd_ = ELF::DYNSYM_COUNT_METHODS::COUNT_AUTO;
+  config_.count_mtd = ELF::ParserConfig::DYNSYM_COUNT::AUTO;
 }
 
 Parser::Parser(const std::string& file) {
@@ -91,7 +90,7 @@ Parser::Parser(const std::string& file) {
     stream_ = std::make_unique<VectorStream>(std::move(*s));
   }
   binary_    = std::unique_ptr<Binary>(new Binary{});
-  count_mtd_ = ELF::DYNSYM_COUNT_METHODS::COUNT_AUTO;
+  config_.count_mtd = ELF::ParserConfig::DYNSYM_COUNT::AUTO;
 }
 
 
@@ -104,9 +103,8 @@ void Parser::set_vdex(std::unique_ptr<VDEX::File> file) {
 }
 
 
-void Parser::init(const std::string& name) {
-  LIEF_DEBUG("Parsing {}", name);
-  ELF::Parser::init(name);
+void Parser::init() {
+  ELF::Parser::init();
   oat_version_t version = OAT::version(oat_binary());
   Binary& oat_bin = oat_binary();
   oat_bin.vdex_ = std::move(vdex_file_);

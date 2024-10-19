@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ namespace LIEF {
 namespace PE {
 
 void init_c_binary(Pe_Binary_t* c_binary, Binary* binary) {
-  c_binary->name    = binary->name().c_str();
   c_binary->handler = reinterpret_cast<void*>(binary);
 
   init_c_dos_header(c_binary, binary);
@@ -51,6 +50,11 @@ void init_c_binary(Pe_Binary_t* c_binary, Binary* binary) {
 
 Pe_Binary_t* pe_parse(const char *file) {
   Binary* binary = Parser::parse(file).release();
+
+  if (binary == nullptr) {
+    return nullptr;
+  }
+
   auto* c_binary = static_cast<Pe_Binary_t*>(malloc(sizeof(Pe_Binary_t)));
   std::memset(c_binary, 0, sizeof(Pe_Binary_t));
   init_c_binary(c_binary, binary);

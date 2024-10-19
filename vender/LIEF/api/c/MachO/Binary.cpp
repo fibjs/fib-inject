@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ namespace MachO {
 void init_c_binary(Macho_Binary_t* c_binary, Binary* binary) {
 
   c_binary->handler = reinterpret_cast<void*>(binary);
-  c_binary->name    = binary->name().c_str();
   c_binary->imagebase = binary->imagebase();
   init_c_header(c_binary, binary);
   init_c_commands(c_binary, binary);

@@ -33,11 +33,6 @@ foreach(example ${LIEF_C_EXAMPLES})
   target_include_directories(${output_target} PUBLIC
     $<TARGET_PROPERTY:LIB_LIEF,INCLUDE_DIRECTORIES>)
 
-  if (MSVC)
-    set_property(TARGET "${output_target}" PROPERTY LINK_FLAGS /NODEFAULTLIB:MSVCRT)
-    target_compile_options("${output_target}" PUBLIC ${LIEF_CRT})
-  endif()
-
   set(LIEF_EXAMPLES_C_FLAGS)
   CHECK_C_COMPILER_FLAG("-ansi" HAS_ANSI)
   if (HAS_ANSI)
@@ -66,10 +61,12 @@ endforeach()
 endif()
 
 
-install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-  DESTINATION share/LIEF/examples/c
-  COMPONENT examples
-  FILES_MATCHING REGEX "(.*).(hpp|h|c)$"
-)
+if (LIEF_INSTALL)
+  install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION share/LIEF/examples/c
+    COMPONENT examples
+    FILES_MATCHING REGEX "(.*).(hpp|h|c)$"
+  )
+endif()
 

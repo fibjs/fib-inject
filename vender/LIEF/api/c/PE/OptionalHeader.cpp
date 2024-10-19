@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "OptionalHeader.hpp"
+#include "LIEF/PE/OptionalHeader.h"
 
 namespace LIEF {
 namespace PE {
@@ -59,3 +60,8 @@ void init_c_optional_header(Pe_Binary_t* c_binary, Binary* binary) {
 
 }
 }
+
+const char* lief_pe_subsytem_str(enum LIEF_PE_SUBSYSTEM e) {
+  return LIEF::PE::to_string(static_cast<LIEF::PE::OptionalHeader::SUBSYSTEM>(e));
+}
+

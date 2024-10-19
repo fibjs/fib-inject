@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,12 +58,12 @@ void JsonVisitor::visit(const Binary& binary) {
   }
 
 
-  // Static symbols
-  std::vector<json> static_symbols;
-  for (const Symbol& symbol : binary.static_symbols()) {
+  // Symtab symbols
+  std::vector<json> symtab_symbols;
+  for (const Symbol& symbol : binary.symtab_symbols()) {
     JsonVisitor visitor;
     visitor(symbol);
-    static_symbols.emplace_back(visitor.get());
+    symtab_symbols.emplace_back(visitor.get());
   }
 
 
@@ -120,7 +120,6 @@ void JsonVisitor::visit(const Binary& binary) {
     notes.emplace_back(visitor.get());
   }
 
-  node_["name"]         = binary.name();
   node_["entrypoint"]   = binary.entrypoint();
   node_["imagebase"]    = binary.imagebase();
   node_["virtual_size"] = binary.virtual_size();
@@ -135,7 +134,7 @@ void JsonVisitor::visit(const Binary& binary) {
   node_["segments"]                    = segments;
   node_["dynamic_entries"]             = dynamic_entries;
   node_["dynamic_symbols"]             = dynamic_symbols;
-  node_["static_symbols"]              = static_symbols;
+  node_["symtab_symbols"]              = symtab_symbols;
   node_["dynamic_relocations"]         = dynamic_relocations;
   node_["pltgot_relocations"]          = pltgot_relocations;
   node_["symbols_version"]             = symbols_version;
@@ -184,7 +183,7 @@ void JsonVisitor::visit(const Header& header) {
 
 void JsonVisitor::visit(const Section& section) {
   std::vector<json> flags;
-  for (ELF_SECTION_FLAGS f : section.flags_list()) {
+  for (Section::FLAGS f : section.flags_list()) {
     flags.emplace_back(to_string(f));
   }
 
@@ -262,23 +261,13 @@ void JsonVisitor::visit(const DynamicEntryFlags& entry) {
   std::vector<std::string> flags_str;
   flags_str.reserve(flags.size());
 
-  if (entry.tag() == DYNAMIC_TAGS::DT_FLAGS) {
-    std::transform(
-        std::begin(flags), std::end(flags),
-        std::back_inserter(flags_str),
-        [] (uint32_t f) {
-          return to_string(static_cast<DYNAMIC_FLAGS>(f));
-        });
-  }
+  std::transform(
+      std::begin(flags), std::end(flags),
+      std::back_inserter(flags_str),
+      [] (DynamicEntryFlags::FLAG f) {
+        return to_string(f);
+      });
 
-  if (entry.tag() == DYNAMIC_TAGS::DT_FLAGS_1) {
-    std::transform(
-        std::begin(flags), std::end(flags),
-        std::back_inserter(flags_str),
-        [] (uint32_t f) {
-          return to_string(static_cast<DYNAMIC_FLAGS_1>(f));
-        });
-  }
 
   node_["flags"] = flags_str;
 }
@@ -316,10 +305,7 @@ void JsonVisitor::visit(const Relocation& relocation) {
     section_name = reloc_sec->name();
   }
 
-
-  if (relocation.architecture() == ARCH::EM_X86_64) {
-    relocation_type = to_string(static_cast<RELOC_x86_64>(relocation.type()));
-  }
+  relocation_type = to_string(relocation.type());
 
   node_["symbol_name"] = symbol_name;
   node_["address"]     = relocation.address();
@@ -333,7 +319,6 @@ void JsonVisitor::visit(const SymbolVersion& sv) {
   if (sv.has_auxiliary_version()) {
    node_["symbol_version_auxiliary"] = sv.symbol_version_auxiliary()->name();
   }
-
 }
 
 void JsonVisitor::visit(const SymbolVersionRequirement& svr) {
@@ -379,84 +364,148 @@ void JsonVisitor::visit(const SymbolVersionAuxRequirement& svar) {
 }
 
 void JsonVisitor::visit(const Note& note) {
-  node_["name"]  = note.name();
-  const std::string type_str = note.is_core() ? to_string(note.type_core()) : to_string(note.type());
-  node_["type"]  = type_str;
-  JsonVisitor visitor;
-  const NoteDetails& d = note.details();
-  d.accept(visitor);
-  node_["details"] = visitor.get();
-}
-
-void JsonVisitor::visit(const NoteDetails&) {
-  node_ = json::object();
+  node_["name"]          = note.name();
+  node_["type"]          = to_string(note.type());
+  node_["original_type"] = note.original_type();
 }
 
 void JsonVisitor::visit(const NoteAbi& note_abi) {
-  node_["abi"]     = to_string(note_abi.abi());
-  node_["version"] = note_abi.version();
+  visit(static_cast<const Note&>(note_abi));
+  if (auto abi = note_abi.abi()) {
+    node_["abi"] = to_string(*abi);
+  }
+  if (auto version = note_abi.version()) {
+    node_["version"] = *version;
+  }
+}
+
+void JsonVisitor::visit(const NoteGnuProperty& note_prop) {
+  visit(static_cast<const Note&>(note_prop));
+  NoteGnuProperty::properties_t props = note_prop.properties();
+  std::vector<json> json_props;
+  json_props.reserve(props.size());
+
+  for (const std::unique_ptr<NoteGnuProperty::Property>& prop : props) {
+    json_props.push_back(to_string(prop->type()));
+  }
+
+  node_["properties"] = std::move(json_props);
 }
 
 void JsonVisitor::visit(const CorePrPsInfo& pinfo) {
-  node_["file_name"] = pinfo.file_name();
-  node_["flags"]     = pinfo.flags();
-  node_["uid"]       = pinfo.uid();
-  node_["gid"]       = pinfo.gid();
-  node_["pid"]       = pinfo.pid();
-  node_["ppid"]      = pinfo.ppid();
-  node_["pgrp"]      = pinfo.pgrp();
-  node_["sid"]       = pinfo.sid();
+  visit(static_cast<const Note&>(pinfo));
+  auto info = pinfo.info();
+  if (!info) {
+    return;
+  }
+  node_["state"]     = info->state;
+  node_["sname"]     = info->sname;
+  node_["zombie"]    = info->zombie;
+  node_["flag"]      = info->flag;
+  node_["uid"]       = info->uid;
+  node_["gid"]       = info->gid;
+  node_["pid"]       = info->pid;
+  node_["ppid"]      = info->ppid;
+  node_["pgrp"]      = info->pgrp;
+  node_["sid"]       = info->sid;
+  node_["filename"]  = info->filename_stripped();
+  node_["args"]      = info->args_stripped();
 }
 
-
 void JsonVisitor::visit(const CorePrStatus& pstatus) {
-  node_["current_sig"] = pstatus.current_sig();
-  node_["sigpend"]     = pstatus.sigpend();
-  node_["sighold"]     = pstatus.sighold();
-  node_["pid"]         = pstatus.pid();
-  node_["ppid"]        = pstatus.ppid();
-  node_["pgrp"]        = pstatus.pgrp();
-  node_["sid"]         = pstatus.sid();
-  node_["sigpend"]     = pstatus.sigpend();
+  visit(static_cast<const Note&>(pstatus));
+  const CorePrStatus::pr_status_t& status = pstatus.status();
+  node_["current_sig"] = status.cursig;
+  node_["sigpend"]     = status.sigpend;
+  node_["sighold"]     = status.sighold;
+  node_["pid"]         = status.pid;
+  node_["ppid"]        = status.ppid;
+  node_["pgrp"]        = status.pgrp;
+  node_["sid"]         = status.sid;
+  node_["sigpend"]     = status.sigpend;
 
   node_["utime"] = {
-    {"tv_sec",  pstatus.utime().sec},
-    {"tv_usec", pstatus.utime().usec}
+    {"tv_sec",  status.utime.sec},
+    {"tv_usec", status.utime.usec}
   };
 
   node_["stime"] = {
-    {"tv_sec",  pstatus.stime().sec},
-    {"tv_usec", pstatus.stime().sec}
+    {"tv_sec",  status.stime.sec},
+    {"tv_usec", status.stime.sec}
   };
 
   node_["stime"] = {
-    {"tv_sec",  pstatus.stime().sec},
-    {"tv_usec", pstatus.stime().usec}
+    {"tv_sec",  status.stime.sec},
+    {"tv_usec", status.stime.usec}
   };
 
-  json regs;
-  for (const CorePrStatus::reg_context_t::value_type& val : pstatus.reg_context()) {
-    regs[to_string(val.first)] = val.second;
-  };
-  node_["regs"] = regs;
+  std::vector<uint64_t> reg_vals = pstatus.register_values();
+  if (!reg_vals.empty()) {
+    json regs;
+    switch (pstatus.architecture()) {
+      case ARCH::I386:
+        {
+          for (size_t i = 0; i < reg_vals.size(); ++i) {
+            regs[to_string(CorePrStatus::Registers::X86(i))] = reg_vals[i];
+          }
+          break;
+        }
+      case ARCH::X86_64:
+        {
+          for (size_t i = 0; i < reg_vals.size(); ++i) {
+            regs[to_string(CorePrStatus::Registers::X86_64(i))] = reg_vals[i];
+          }
+          break;
+        }
+      case ARCH::ARM:
+        {
+          for (size_t i = 0; i < reg_vals.size(); ++i) {
+            regs[to_string(CorePrStatus::Registers::ARM(i))] = reg_vals[i];
+          }
+          break;
+        }
+      case ARCH::AARCH64:
+        {
+          for (size_t i = 0; i < reg_vals.size(); ++i) {
+            regs[to_string(CorePrStatus::Registers::AARCH64(i))] = reg_vals[i];
+          }
+          break;
+        }
+      default:
+        {
+          regs = reg_vals;
+        }
+    }
+    node_["regs"] = regs;
+  }
 }
 
 void JsonVisitor::visit(const CoreAuxv& auxv) {
+  visit(static_cast<const Note&>(auxv));
   std::vector<json> values;
-  for (const CoreAuxv::val_context_t::value_type& val : auxv.values()) {
-    node_[to_string(val.first)] = val.second;
+  const std::map<CoreAuxv::TYPE, uint64_t> aux_values = auxv.values();
+  for (const auto& [k, v] : aux_values) {
+    node_[to_string(k)] = v;
   }
 }
 
 void JsonVisitor::visit(const CoreSigInfo& siginfo) {
-  node_["signo"] = siginfo.signo();
-  node_["sigcode"] = siginfo.sigcode();
-  node_["sigerrno"] = siginfo.sigerrno();
+  visit(static_cast<const Note&>(siginfo));
+  if (auto signo = siginfo.signo()) {
+    node_["signo"] = *signo;
+  }
+  if (auto sigcode = siginfo.sigcode()) {
+    node_["sigcode"] = *sigcode;
+  }
+  if (auto sigerrno = siginfo.sigerrno()) {
+    node_["sigerrno"] = *sigerrno;
+  }
 }
 
 void JsonVisitor::visit(const CoreFile& file) {
+  visit(static_cast<const Note&>(file));
   std::vector<json> files;
-  for (const CoreFileEntry& entry : file.files()) {
+  for (const CoreFile::entry_t& entry : file.files()) {
     const json file = {
       {"start",    entry.start},
       {"end",      entry.end},
@@ -468,6 +517,22 @@ void JsonVisitor::visit(const CoreFile& file) {
   node_["files"] = files;
   node_["count"] = file.count();
 }
+
+void JsonVisitor::visit(const AndroidIdent& ident) {
+  visit(static_cast<const Note&>(ident));
+  node_["ndk_version"] = ident.ndk_version();
+  node_["sdk_verison"] = ident.sdk_version();
+  node_["ndk_build_number"] = ident.ndk_build_number();
+}
+
+
+void JsonVisitor::visit(const QNXStack& note) {
+  visit(static_cast<const Note&>(note));
+  node_["stack_size"] = note.stack_size();
+  node_["sdk_verison"] = note.stack_allocated();
+  node_["is_executable"] = note.is_executable();
+}
+
 
 void JsonVisitor::visit(const GnuHash& gnuhash) {
   node_["nb_buckets"]    = gnuhash.nb_buckets();

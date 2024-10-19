@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_RELOCATION_DYLD_COMMAND_H_
-#define LIEF_MACHO_RELOCATION_DYLD_COMMAND_H_
-#include <iostream>
+#ifndef LIEF_MACHO_RELOCATION_DYLD_COMMAND_H
+#define LIEF_MACHO_RELOCATION_DYLD_COMMAND_H
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/MachO/Relocation.hpp"
 
@@ -37,14 +36,20 @@ class LIEF_API RelocationDyld : public Relocation {
 
   public:
   using Relocation::Relocation;
-  RelocationDyld();
+  using LIEF::Relocation::operator<;
+  using LIEF::Relocation::operator<=;
+  using LIEF::Relocation::operator>;
+  using LIEF::Relocation::operator>=;
+  RelocationDyld() = default;
 
-  RelocationDyld& operator=(const RelocationDyld&);
-  RelocationDyld(const RelocationDyld&);
+  RelocationDyld& operator=(const RelocationDyld&) = default;
+  RelocationDyld(const RelocationDyld&) = default;
 
-  virtual ~RelocationDyld();
+  ~RelocationDyld() override = default;
 
-  Relocation* clone() const override;
+  std::unique_ptr<Relocation> clone() const override {
+    return std::unique_ptr<RelocationDyld>(new RelocationDyld(*this));
+  }
 
   //! Indicates whether the item containing the address to be
   //! relocated is part of a CPU instruction that uses PC-relative addressing.
@@ -54,25 +59,32 @@ class LIEF_API RelocationDyld : public Relocation {
   bool is_pc_relative() const override;
 
   //! Origin of the relocation. For this concrete object, it
-  //! should be RELOCATION_ORIGINS::ORIGIN_DYLDINFO
-  RELOCATION_ORIGINS origin() const override;
+  //! should be Relocation::ORIGIN::DYLDINFO
+  ORIGIN origin() const override {
+    return ORIGIN::DYLDINFO;
+  }
 
   void pc_relative(bool val) override;
 
-  bool operator==(const RelocationDyld& rhs) const;
-  bool operator!=(const RelocationDyld& rhs) const;
-
   bool operator<(const RelocationDyld& rhs) const;
-  bool operator>=(const RelocationDyld& rhs) const;
+  bool operator>=(const RelocationDyld& rhs) const {
+    return !(*this < rhs);
+  }
 
   bool operator>(const RelocationDyld& rhs) const;
-  bool operator<=(const RelocationDyld& rhs) const;
+  bool operator<=(const RelocationDyld& rhs) const {
+    return !(*this > rhs);
+  }
 
   void accept(Visitor& visitor) const override;
 
-  static bool classof(const Relocation& r);
+  static bool classof(const Relocation& r) {
+    return r.origin() == Relocation::ORIGIN::DYLDINFO;
+  }
 
-  std::ostream& print(std::ostream& os) const override;
+  std::ostream& print(std::ostream& os) const override {
+    return Relocation::print(os);
+  }
 };
 
 }

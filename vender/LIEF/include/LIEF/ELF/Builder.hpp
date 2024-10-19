@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  * Copyright 2017 - 2021, NVIDIA CORPORATION. All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_BUIDLER_H_
-#define LIEF_ELF_BUIDLER_H_
+#ifndef LIEF_ELF_BUIDLER_H
+#define LIEF_ELF_BUIDLER_H
 
-#include <vector>
 #include <memory>
-#include <string>
 #include <set>
-#include <unordered_map>
-#include <functional>
+#include <string>
+#include <vector>
 
 #include "LIEF/errors.hpp"
 
 #include "LIEF/visibility.h"
 #include "LIEF/iostream.hpp"
-#include "LIEF/ELF/enums.hpp"
-
-#include "LIEF/ELF/enums.hpp"
-
-struct Profiler;
 
 namespace LIEF {
 namespace ELF {
@@ -49,32 +42,36 @@ class Layout;
 class Relocation;
 
 //! Class which takes an ELF::Binary object and reconstructs a valid binary
+//!
+//! This interface assumes that the layout of input ELF binary is correct (i.e.
+//! the binary can run).
 class LIEF_API Builder {
   friend class ObjectFileLayout;
   friend class Layout;
   friend class ExeLayout;
-  public:
-  friend struct ::Profiler;
 
+  public:
   //! Configuration options to tweak the building process
   struct config_t {
-    bool dt_hash         = true;
-    bool dyn_str         = true;
-    bool dynamic_section = true;
-    bool fini_array      = true;
-    bool gnu_hash        = true;
-    bool init_array      = true;
-    bool interpreter     = true;
-    bool jmprel          = true;
-    bool notes           = true;
-    bool preinit_array   = true;
-    bool rela            = true;
-    bool static_symtab   = true;
-    bool sym_verdef      = true;
-    bool sym_verneed     = true;
-    bool sym_versym      = true;
-    bool symtab          = true;
-
+    bool dt_hash         = true;  /// Rebuild DT_HASH
+    bool dyn_str         = true;  /// Rebuild DT_STRTAB
+    bool dynamic_section = true;  /// Rebuild PT_DYNAMIC segment
+    bool fini_array      = true;  /// Rebuild DT_FINI_ARRAY
+    bool gnu_hash        = true;  /// Rebuild DT_GNU_HASH
+    bool init_array      = true;  /// Rebuild DT_INIT_ARRAY
+    bool interpreter     = true;  /// Rebuild PT_INTERPRETER
+    bool jmprel          = true;  /// Rebuild DT_JMPREL
+    bool notes           = false; /// Disable note building since it can break the default layout
+    bool preinit_array   = true;  /// Rebuild DT_PREINIT_ARRAY
+    bool relr            = true;  /// Rebuild DT_RELR
+    bool android_rela    = true;  /// Rebuild DT_ANDROID_REL[A]
+    bool rela            = true;  /// Rebuild DT_REL[A]
+    bool static_symtab   = true;  /// Rebuild `.symtab`
+    bool sym_verdef      = true;  /// Rebuild DT_VERDEF
+    bool sym_verneed     = true;  /// Rebuild DT_VERNEED
+    bool sym_versym      = true;  /// Rebuild DT_VERSYM
+    bool symtab          = true;  /// Rebuild DT_SYMTAB
+    bool coredump_notes  = true;  /// Rebuild the Coredump notes
     bool force_relocate  = false; /// Force to relocating all the ELF structures that are supported by LIEF (mostly for testing)
   };
 
@@ -87,12 +84,12 @@ class LIEF_API Builder {
   void build();
 
   //! Tweak the ELF builder with the provided config parameter
-  inline Builder& set_config(config_t conf) {
-    config_ = std::move(conf);
+  Builder& set_config(config_t conf) {
+    config_ = conf;
     return *this;
   }
 
-  inline config_t& config() {
+  config_t& config() {
     return config_;
   }
 
@@ -125,7 +122,7 @@ class LIEF_API Builder {
   ok_error_t build_segments();
 
   template<typename ELF_T>
-  ok_error_t build_static_symbols();
+  ok_error_t build_symtab_symbols();
 
   template<typename ELF_T>
   ok_error_t build_dynamic();
@@ -141,6 +138,12 @@ class LIEF_API Builder {
 
   template<typename ELF_T>
   ok_error_t build_dynamic_relocations();
+
+  template<typename ELF_T>
+  ok_error_t build_relative_relocations();
+
+  template<typename ELF_T>
+  ok_error_t build_android_relocations();
 
   template<typename ELF_T>
   ok_error_t build_pltgot_relocations();
@@ -173,7 +176,7 @@ class LIEF_API Builder {
   template<typename ELF_T>
   ok_error_t build_notes();
 
-  ok_error_t build(const Note& note, std::set<Section*>& sections);
+  ok_error_t update_note_section(const Note& note, std::set<const Note*>& notes);
 
   template<typename ELF_T>
   ok_error_t build_overlay();
@@ -183,11 +186,12 @@ class LIEF_API Builder {
   template<class ELF_T>
   ok_error_t process_object_relocations();
 
+  bool should_build_notes() const;
+
   config_t config_;
   mutable vector_iostream ios_;
   Binary* binary_{nullptr};
   std::unique_ptr<Layout> layout_;
-
 };
 
 } // namespace ELF

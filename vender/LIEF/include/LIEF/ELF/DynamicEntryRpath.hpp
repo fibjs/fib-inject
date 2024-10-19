@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_DYNAMIC_ENTRY_RPATH_H_
-#define LIEF_ELF_DYNAMIC_ENTRY_RPATH_H_
+#ifndef LIEF_ELF_DYNAMIC_ENTRY_RPATH_H
+#define LIEF_ELF_DYNAMIC_ENTRY_RPATH_H
 
 #include <string>
+#include <vector>
 
 #include "LIEF/visibility.h"
-
 #include "LIEF/ELF/DynamicEntry.hpp"
 
 namespace LIEF {
@@ -28,27 +28,40 @@ namespace ELF {
 //! Class which represents a ``DT_RPATH`` entry. This attribute is
 //! deprecated (cf. ``man ld``) in favour of ``DT_RUNPATH`` (See DynamicRunPath)
 class LIEF_API DynamicEntryRpath : public DynamicEntry {
-
   public:
   static constexpr char delimiter = ':';
   using DynamicEntry::DynamicEntry;
-  DynamicEntryRpath();
+  DynamicEntryRpath() :
+    DynamicEntry::DynamicEntry(DynamicEntry::TAG::RPATH, 0)
+  {}
 
-  DynamicEntryRpath(std::string rpath);
+  DynamicEntryRpath(std::string rpath) :
+    DynamicEntry::DynamicEntry(DynamicEntry::TAG::RPATH, 0),
+    rpath_(std::move(rpath))
+  {}
 
   //! Constructor from a list of paths
-  DynamicEntryRpath(const std::vector<std::string>& paths);
+  DynamicEntryRpath(const std::vector<std::string>& paths) :
+    DynamicEntry::DynamicEntry(DynamicEntry::TAG::RPATH, 0)
+  {
+    this->paths(paths);
+  }
 
-  DynamicEntryRpath& operator=(const DynamicEntryRpath&);
-  DynamicEntryRpath(const DynamicEntryRpath&);
+  DynamicEntryRpath& operator=(const DynamicEntryRpath&) = default;
+  DynamicEntryRpath(const DynamicEntryRpath&) = default;
+
+  std::unique_ptr<DynamicEntry> clone() const override {
+    return std::unique_ptr<DynamicEntryRpath>(new DynamicEntryRpath(*this));
+  }
 
   //! The actual rpath as a string
-  const std::string& name() const;
-  void name(const std::string& name);
+  const std::string& rpath() const {
+    return rpath_;
+  }
 
-  //! The actual rpath as a string
-  const std::string& rpath() const;
-  void rpath(const std::string& name);
+  void rpath(std::string name) {
+    rpath_ = std::move(name);
+  }
 
   //! Paths as a list
   std::vector<std::string> paths() const;
@@ -58,19 +71,28 @@ class LIEF_API DynamicEntryRpath : public DynamicEntry {
   DynamicEntryRpath& insert(size_t pos, const std::string& path);
 
   //! Append the given ``path``
-  DynamicEntryRpath& append(const std::string& path);
+  DynamicEntryRpath& append(std::string path);
 
   //! Remove the given ``path``
   DynamicEntryRpath& remove(const std::string& path);
 
-  DynamicEntryRpath& operator+=(const std::string& path);
-  DynamicEntryRpath& operator-=(const std::string& path);
+  DynamicEntryRpath& operator+=(std::string path) {
+    return append(std::move(path));
+  }
 
-  static bool classof(const DynamicEntry* entry);
+  DynamicEntryRpath& operator-=(const std::string& path) {
+    return remove(path);
+  }
+
+  static bool classof(const DynamicEntry* entry) {
+    return entry->tag() == DynamicEntry::TAG::RPATH;
+  }
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
+
+  ~DynamicEntryRpath() = default;
 
   private:
   std::string rpath_;

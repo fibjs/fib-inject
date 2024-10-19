@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 #include <iostream>
 #include <memory>
-#include <fstream>
-#include <algorithm>
-#include <iterator>
-
 #include <LIEF/ELF.hpp>
 
 int main(int argc, char **argv) {

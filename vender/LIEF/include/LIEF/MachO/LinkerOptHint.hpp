@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
  */
 #ifndef LIEF_MACHO_LINKER_OPT_HINT_COMMAND_H
 #define LIEF_MACHO_LINKER_OPT_HINT_COMMAND_H
-#include <vector>
-#include <iostream>
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 #include "LIEF/span.hpp"
 
 #include "LIEF/MachO/LoadCommand.hpp"
@@ -42,50 +40,51 @@ class LIEF_API LinkerOptHint : public LoadCommand {
   friend class LinkEdit;
 
   public:
-  LinkerOptHint();
+  LinkerOptHint() = default;
   LinkerOptHint(const details::linkedit_data_command& cmd);
 
-  LinkerOptHint& operator=(const LinkerOptHint& copy);
-  LinkerOptHint(const LinkerOptHint& copy);
+  LinkerOptHint& operator=(const LinkerOptHint& copy) = default;
+  LinkerOptHint(const LinkerOptHint& copy) = default;
 
-  LinkerOptHint* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<LinkerOptHint>(new LinkerOptHint(*this));
+  }
 
-  //! Offset in the binary where the signature starts
-  inline uint32_t data_offset() const {
+  //! Offset in the binary where the *hint* starts
+  uint32_t data_offset() const {
     return data_offset_;
   }
 
-  //! Size of the raw signature
-  inline uint32_t data_size() const {
+  //! Size of the payload
+  uint32_t data_size() const {
     return data_size_;
   }
 
-  inline void data_offset(uint32_t offset) {
+  void data_offset(uint32_t offset) {
     data_offset_ = offset;
   }
 
-  inline void data_size(uint32_t size) {
+  void data_size(uint32_t size) {
     data_size_ = size;
   }
 
-  inline span<const uint8_t> content() const {
+  span<const uint8_t> content() const {
     return content_;
   }
 
-  inline span<uint8_t> content() {
+  span<uint8_t> content() {
     return content_;
   }
 
-  ~LinkerOptHint() override;
-
-  bool operator==(const LinkerOptHint& rhs) const;
-  bool operator!=(const LinkerOptHint& rhs) const;
+  ~LinkerOptHint() override = default;
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::LINKER_OPTIMIZATION_HINT;
+  }
 
   private:
   uint32_t      data_offset_ = 0;

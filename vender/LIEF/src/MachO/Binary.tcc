@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "LIEF/MachO/SegmentCommand.hpp"
 #include "LIEF/MachO/Relocation.hpp"
 #include "LIEF/errors.hpp"
+#include "internal_utils.hpp"
 
 namespace LIEF {
 namespace MachO {
@@ -92,7 +93,7 @@ ok_error_t Binary::patch_relocation(Relocation& relocation, uint64_t from, uint6
   }
   auto offset = virtual_address_to_offset(relocation.address());
   if (!offset) {
-    return offset.error();
+    return make_error_code(offset.error());
   }
   uint64_t relative_offset = *offset - segment->file_offset();
   span<uint8_t> segment_content = segment->writable_content();
@@ -104,7 +105,7 @@ ok_error_t Binary::patch_relocation(Relocation& relocation, uint64_t from, uint6
   }
 
   if (relative_offset >= segment_size || (relative_offset + sizeof(T)) >= segment_size) {
-    LIEF_DEBUG("Offset out of bound for relocation: {}", relocation);
+    LIEF_DEBUG("Offset out of bound for relocation: {}", to_string(relocation));
     return make_error_code(lief_errors::read_out_of_bound);
   }
 

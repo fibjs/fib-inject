@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ABSTRACT_HEADER_H_
-#define LIEF_ABSTRACT_HEADER_H_
+#ifndef LIEF_ABSTRACT_HEADER_H
+#define LIEF_ABSTRACT_HEADER_H
 
-#include <iostream>
+#include <ostream>
 #include <set>
+#include <cstdint>
 
 #include "LIEF/Object.hpp"
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/Abstract/enums.hpp"
 
@@ -31,7 +31,7 @@ class LIEF_API Header : public Object {
   Header();
   Header(const Header&);
   Header& operator=(const Header&);
-  virtual ~Header();
+  ~Header() override;
 
 
   ARCHITECTURES          architecture() const;
@@ -48,7 +48,7 @@ class LIEF_API Header : public Object {
   bool is_64() const;
 
   //! @brief Method so that the ``visitor`` can visit us
-  void           accept(Visitor& visitor) const override;
+  void accept(Visitor& visitor) const override;
 
   void architecture(ARCHITECTURES arch);
   void modes(const std::set<MODES>& m);
@@ -64,8 +64,6 @@ class LIEF_API Header : public Object {
   OBJECT_TYPES    object_type_ = OBJECT_TYPES::TYPE_NONE;
   uint64_t        entrypoint_ = 0;
   ENDIANNESS      endianness_ = ENDIANNESS::ENDIAN_NONE;
-
-
 };
 }
 

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iomanip>
-
-#include "LIEF/PE/signature/OIDToString.hpp"
+#include "LIEF/Visitor.hpp"
 #include "LIEF/PE/signature/ContentInfo.hpp"
+#include "LIEF/PE/signature/GenericContent.hpp"
 #include "LIEF/PE/EnumToString.hpp"
-#include "LIEF/utils.hpp"
+#include "LIEF/PE/signature/SpcIndirectData.hpp"
+
+#include "Object.tcc"
+#include "internal_utils.hpp"
+
+#include <ostream>
 
 namespace LIEF {
 namespace PE {
 
-ContentInfo::ContentInfo() = default;
-ContentInfo::ContentInfo(const ContentInfo&) = default;
-ContentInfo& ContentInfo::operator=(const ContentInfo&) = default;
-ContentInfo::~ContentInfo() = default;
 
+ContentInfo::ContentInfo() :
+  value_(std::make_unique<GenericContent>())
+{}
+
+ContentInfo::ContentInfo(const ContentInfo& other) :
+  Object::Object(other),
+  value_{other.value_->clone()}
+{}
+
+ContentInfo& ContentInfo::operator=(ContentInfo other) {
+  swap(other);
+  return *this;
+}
+
+void ContentInfo::swap(ContentInfo& other) noexcept {
+  std::swap(value_, other.value_);
+}
 
 void ContentInfo::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
+std::vector<uint8_t> ContentInfo::digest() const {
+  if (SpcIndirectData::classof(value_.get())) {
+    const auto* spc_ind_data = value_->as<SpcIndirectData>();
+    return as_vector(spc_ind_data->digest());
+  }
+  return {};
+}
+
+ALGORITHMS ContentInfo::digest_algorithm() const {
+  if (SpcIndirectData::classof(value_.get())) {
+    const auto* spc_ind_data = value_->as<SpcIndirectData>();
+    return spc_ind_data->digest_algorithm();
+  }
+  return ALGORITHMS::UNKNOWN;
+}
 
 std::ostream& operator<<(std::ostream& os, const ContentInfo& content_info) {
-  os << "Authentihash: " << hex_dump(content_info.digest())
-     << "(" << to_string(content_info.digest_algorithm()) << ")\n";
-
+  content_info.value().print(os);
   return os;
 }
 

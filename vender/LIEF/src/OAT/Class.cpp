@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 #include <climits>
 
 #include "LIEF/OAT/Class.hpp"
-#include "LIEF/OAT/Method.hpp"
 #include "LIEF/OAT/hash.hpp"
 #include "LIEF/OAT/EnumToString.hpp"
+#include "LIEF/DEX/Method.hpp"
 
 #include "LIEF/DEX/Class.hpp"
 
@@ -242,18 +242,7 @@ void Class::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool Class::operator==(const Class& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
 
-bool Class::operator!=(const Class& rhs) const {
-  return !(*this == rhs);
-}
 
 std::ostream& operator<<(std::ostream& os, const Class& cls) {
   os << cls.fullname() << " - "

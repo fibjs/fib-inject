@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,62 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iomanip>
+#include <spdlog/fmt/fmt.h>
+#include "LIEF/Visitor.hpp"
+#include "LIEF/PE/LoadConfigurations/LoadConfigurationV2.hpp"
 
-#include "LIEF/PE/hash.hpp"
-#include "LIEF/exception.hpp"
-#include "LIEF/iostream.hpp"
-
-#include "LIEF/PE/LoadConfigurations.hpp"
+#include "PE/Structures.hpp"
 
 namespace LIEF {
 namespace PE {
 
-LoadConfigurationV2& LoadConfigurationV2::operator=(const LoadConfigurationV2&) = default;
-LoadConfigurationV2::LoadConfigurationV2(const LoadConfigurationV2&) = default;
-LoadConfigurationV2::~LoadConfigurationV2() = default;
-
-LoadConfigurationV2::LoadConfigurationV2() = default;
-
-WIN_VERSION LoadConfigurationV2::version() const {
-  return LoadConfigurationV2::VERSION;
-}
-
-
-const CodeIntegrity& LoadConfigurationV2::code_integrity() const {
-  return code_integrity_;
-}
-
-CodeIntegrity& LoadConfigurationV2::code_integrity() {
-  return const_cast<CodeIntegrity&>(static_cast<const LoadConfigurationV2*>(this)->code_integrity());
-}
+template<class T>
+LoadConfigurationV2::LoadConfigurationV2(const details::load_configuration_v2<T>& header) :
+  LoadConfigurationV1{reinterpret_cast<const details::load_configuration_v1<T>&>(header)},
+  code_integrity_{header.CodeIntegrity}
+{}
 
 void LoadConfigurationV2::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool LoadConfigurationV2::operator==(const LoadConfigurationV2& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool LoadConfigurationV2::operator!=(const LoadConfigurationV2& rhs) const {
-  return !(*this == rhs);
-}
-
 std::ostream& LoadConfigurationV2::print(std::ostream& os) const {
   LoadConfigurationV1::print(os);
-
-  os << std::setw(LoadConfiguration::PRINT_WIDTH) << std::setfill(' ') << "Code Integrity:" << std::endl;
-  os << code_integrity();
+  os << "LoadConfigurationV2 (CodeIntegrity):\n"
+     << code_integrity();
   return os;
 }
 
-
+template
+LoadConfigurationV2::LoadConfigurationV2(const details::load_configuration_v2<uint32_t>& header);
+template
+LoadConfigurationV2::LoadConfigurationV2(const details::load_configuration_v2<uint64_t>& header);
 
 } // namespace PE
 } // namespace LIEF

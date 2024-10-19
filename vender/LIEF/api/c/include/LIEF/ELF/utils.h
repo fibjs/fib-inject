@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef C_LIEF_ELF_UTILS_H_
-#define C_LIEF_ELF_UTILS_H_
-
-/** @defgroup elf_utils_c_api Utils
- *  @ingroup elf_c_api
- *  @addtogroup elf_utils_c_api
- *  @brief Utils C API
- *
- *  @{
- */
+#ifndef LIEF_C_ELF_UTILS_H
+#define LIEF_C_ELF_UTILS_H
 
 #include <stddef.h>
 
@@ -42,5 +34,4 @@ LIEF_API bool is_elf(const char* file);
 #endif
 
 
-/** @} */
 #endif

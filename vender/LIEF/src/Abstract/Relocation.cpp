@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,21 +60,6 @@ void Relocation::size(size_t size) {
 void Relocation::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
-
-
-bool Relocation::operator==(const Relocation& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = AbstractHash::hash(*this);
-  size_t hash_rhs = AbstractHash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool Relocation::operator!=(const Relocation& rhs) const {
-  return !(*this == rhs);
-}
-
 
 bool Relocation::operator<(const Relocation& rhs) const {
   return address() < rhs.address();

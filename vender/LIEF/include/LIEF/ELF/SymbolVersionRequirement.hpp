@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_ELF_SYMBOL_VERSION_REQUIREMENTS_H_
-#define LIEF_ELF_SYMBOL_VERSION_REQUIREMENTS_H_
+#ifndef LIEF_ELF_SYMBOL_VERSION_REQUIREMENTS_H
+#define LIEF_ELF_SYMBOL_VERSION_REQUIREMENTS_H
 
 #include <string>
-#include <iostream>
+#include <ostream>
 #include <vector>
 #include <memory>
 
@@ -28,13 +28,14 @@
 namespace LIEF {
 namespace ELF {
 class Parser;
+class SymbolVersionAuxRequirement;
 
 namespace details {
 struct Elf64_Verneed;
 struct Elf32_Verneed;
 }
 
-//! Class which represents an entry in the ``DT_VERNEED`` or ``.gnu.version_r`` table
+//! Class which represents an entry in the `DT_VERNEED` or `.gnu.version_r` table
 class LIEF_API SymbolVersionRequirement : public Object {
   friend class Parser;
 
@@ -43,10 +44,10 @@ class LIEF_API SymbolVersionRequirement : public Object {
   using it_aux_requirement       = ref_iterator<aux_requirement_t&, SymbolVersionAuxRequirement*>;
   using it_const_aux_requirement = const_ref_iterator<const aux_requirement_t&, const SymbolVersionAuxRequirement*>;
 
-  SymbolVersionRequirement();
+  SymbolVersionRequirement() = default;
   SymbolVersionRequirement(const details::Elf64_Verneed& header);
   SymbolVersionRequirement(const details::Elf32_Verneed& header);
-  virtual ~SymbolVersionRequirement();
+  ~SymbolVersionRequirement() override = default;
 
   SymbolVersionRequirement& operator=(SymbolVersionRequirement other);
   SymbolVersionRequirement(const SymbolVersionRequirement& other);
@@ -56,30 +57,47 @@ class LIEF_API SymbolVersionRequirement : public Object {
   //!
   //! This field should always have the value ``1``. It will be changed
   //! if the versioning implementation has to be changed in an incompatible way.
-  uint16_t version() const;
+  uint16_t version() const {
+    return version_;
+  }
 
-  //! Number of associated auxiliary entries
-  uint32_t cnt() const;
+  //! Number of auxiliary entries
+  size_t cnt() const {
+    return aux_requirements_.size();
+  }
 
   //! Auxiliary entries as an iterator over SymbolVersionAuxRequirement
-  it_aux_requirement       auxiliary_symbols();
-  it_const_aux_requirement auxiliary_symbols() const;
+  it_aux_requirement auxiliary_symbols() {
+    return aux_requirements_;
+  }
+
+  it_const_aux_requirement auxiliary_symbols() const {
+    return aux_requirements_;
+  }
 
   //! Return the library name associated with this requirement (e.g. ``libc.so.6``)
-  const std::string& name() const;
+  const std::string& name() const {
+    return name_;
+  }
 
-  void version(uint16_t version);
-  void name(const std::string& name);
+  void version(uint16_t version) {
+    version_ = version;
+  }
+
+  void name(const std::string& name) {
+    name_ = name;
+  }
 
   //! Add a version auxiliary requirement to the existing list
   SymbolVersionAuxRequirement& add_aux_requirement(const SymbolVersionAuxRequirement& aux_requirement);
 
   void accept(Visitor& visitor) const override;
 
-  bool operator==(const SymbolVersionRequirement& rhs) const;
-  bool operator!=(const SymbolVersionRequirement& rhs) const;
-
-  LIEF_API friend std::ostream& operator<<(std::ostream& os, const SymbolVersionRequirement& symr);
+  LIEF_API friend
+  std::ostream& operator<<(std::ostream& os, const SymbolVersionRequirement& symr) {
+    os << symr.version() << " " << symr.name();
+    return os;
+  }
 
   private:
   aux_requirement_t aux_requirements_;

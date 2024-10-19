@@ -4,7 +4,7 @@ ART
 Utilities
 *********
 
-.. autofunction:: lief.ART.is_art
+.. autofunction:: lief.is_art
 
 .. autofunction:: lief.ART.version
 
@@ -25,9 +25,6 @@ File
 ****
 
 .. autoclass:: lief.ART.File
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 ----------
 
@@ -35,9 +32,6 @@ Header
 ******
 
 .. autoclass:: lief.ART.Header
-  :members:
-  :inherited-members:
-  :undoc-members:
 
 
 

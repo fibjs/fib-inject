@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 #include <algorithm>
-#include <fstream>
 #include <iterator>
-#include <stdexcept>
 #include <vector>
 
 #include "LIEF/BinaryStream/FileStream.hpp"
 #include "LIEF/BinaryStream/SpanStream.hpp"
-#include "logging.hpp"
 
 #include "LIEF/ELF/utils.hpp"
 #include "ELF/Structures.hpp"
@@ -91,13 +88,5 @@ uint32_t dl_new_hash(const char* name) {
   return h & 0xffffffff;
 }
 
-
-
 } // namespace ELF
 } // namespace LIEF
-
-
-
-
-
-

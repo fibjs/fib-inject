@@ -1,5 +1,5 @@
 /* Copyright 2017 - 2021 J. Rieck (based on R. Thomas's work)
- * Copyright 2017 - 2022 Quarkslab
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_RPATH_COMMAND_H_
-#define LIEF_MACHO_RPATH_COMMAND_H_
+#ifndef LIEF_MACHO_RPATH_COMMAND_H
+#define LIEF_MACHO_RPATH_COMMAND_H
 #include <string>
-#include <iostream>
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 
 #include "LIEF/MachO/LoadCommand.hpp"
 
@@ -36,28 +35,34 @@ struct rpath_command;
 //! associated with the ``@rpath`` prefix.
 class LIEF_API RPathCommand : public LoadCommand {
   public:
-  RPathCommand();
+  RPathCommand() = default;
   RPathCommand(const details::rpath_command& rpathCmd);
 
-  RPathCommand& operator=(const RPathCommand& copy);
-  RPathCommand(const RPathCommand& copy);
+  RPathCommand& operator=(const RPathCommand& copy) = default;
+  RPathCommand(const RPathCommand& copy) = default;
 
-  RPathCommand* clone() const override;
+  std::unique_ptr<LoadCommand> clone() const override {
+    return std::unique_ptr<RPathCommand>(new RPathCommand(*this));
+  }
 
-  virtual ~RPathCommand();
+  ~RPathCommand() override = default;
 
   //! The rpath value as a string
-  const std::string& path() const;
-  void path(const std::string& path);
+  const std::string& path() const {
+    return path_;
+  }
 
-  bool operator==(const RPathCommand& rhs) const;
-  bool operator!=(const RPathCommand& rhs) const;
+  void path(std::string path) {
+    path_ = std::move(path);
+  }
 
   void accept(Visitor& visitor) const override;
 
   std::ostream& print(std::ostream& os) const override;
 
-  static bool classof(const LoadCommand* cmd);
+  static bool classof(const LoadCommand* cmd) {
+    return cmd->command() == LoadCommand::TYPE::RPATH;
+  }
 
   private:
   std::string path_;

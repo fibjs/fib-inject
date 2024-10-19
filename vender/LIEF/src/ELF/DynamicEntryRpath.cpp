@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #include "LIEF/ELF/DynamicEntryRpath.hpp"
+#include "LIEF/Visitor.hpp"
 #include "logging.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -23,45 +25,6 @@
 
 namespace LIEF {
 namespace ELF {
-
-DynamicEntryRpath::DynamicEntryRpath() :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RPATH, 0}
-{}
-
-DynamicEntryRpath& DynamicEntryRpath::operator=(const DynamicEntryRpath&) = default;
-DynamicEntryRpath::DynamicEntryRpath(const DynamicEntryRpath&) = default;
-
-
-DynamicEntryRpath::DynamicEntryRpath(std::string rpath) :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RPATH, 0},
-  rpath_{std::move(rpath)}
-{}
-
-
-DynamicEntryRpath::DynamicEntryRpath(const std::vector<std::string>& paths) :
-  DynamicEntry::DynamicEntry{DYNAMIC_TAGS::DT_RPATH, 0}
-{
-  this->paths(paths);
-}
-
-const std::string& DynamicEntryRpath::name() const {
-  return rpath_;
-}
-
-
-void DynamicEntryRpath::name(const std::string& name) {
-  rpath_ = name;
-}
-
-const std::string& DynamicEntryRpath::rpath() const {
-  return name();
-}
-
-
-void DynamicEntryRpath::rpath(const std::string& rpath) {
-  name(rpath);
-}
-
 
 std::vector<std::string> DynamicEntryRpath::paths() const {
   std::stringstream ss;
@@ -81,9 +44,9 @@ void DynamicEntryRpath::paths(const std::vector<std::string>& paths) {
       });
 }
 
-DynamicEntryRpath& DynamicEntryRpath::append(const std::string& path) {
+DynamicEntryRpath& DynamicEntryRpath::append(std::string path) {
   std::vector<std::string> paths = this->paths();
-  paths.push_back(path);
+  paths.push_back(std::move(path));
   this->paths(paths);
   return *this;
 }
@@ -115,33 +78,18 @@ DynamicEntryRpath& DynamicEntryRpath::insert(size_t pos, const std::string& path
   return *this;
 }
 
-DynamicEntryRpath& DynamicEntryRpath::operator+=(const std::string& path) {
-  return append(path);
-}
-
-DynamicEntryRpath& DynamicEntryRpath::operator-=(const std::string& path) {
-  return remove(path);
-}
 
 void DynamicEntryRpath::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-bool DynamicEntryRpath::classof(const DynamicEntry* entry) {
-  const DYNAMIC_TAGS tag = entry->tag();
-  return tag == DYNAMIC_TAGS::DT_RPATH;
-}
-
 
 std::ostream& DynamicEntryRpath::print(std::ostream& os) const {
-
   DynamicEntry::print(os);
-  os << std::hex
-     << std::left
-     << std::setw(10) << rpath();
+  os << fmt::format("{:<10}", rpath());
   return os;
-
 }
+
 }
 }
 

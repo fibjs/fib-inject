@@ -1,5 +1,5 @@
-/* Copyright 2021 - 2022 R. Thomas
- * Copyright 2021 - 2022 Quarkslab
+/* Copyright 2021 - 2024 R. Thomas
+ * Copyright 2021 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "LIEF/Visitor.hpp"
 #include "LIEF/PE/signature/attributes/SpcSpOpusInfo.hpp"
 namespace LIEF {
 namespace PE {
-
-SpcSpOpusInfo::SpcSpOpusInfo() :
-  Attribute(SIG_ATTRIBUTE_TYPES::SPC_SP_OPUS_INFO)
-{}
-
-SpcSpOpusInfo::SpcSpOpusInfo(const SpcSpOpusInfo&) = default;
-SpcSpOpusInfo& SpcSpOpusInfo::operator=(const SpcSpOpusInfo&) = default;
-
-std::unique_ptr<Attribute> SpcSpOpusInfo::clone() const {
-  return std::unique_ptr<Attribute>(new SpcSpOpusInfo{*this});
-}
-
-SpcSpOpusInfo::SpcSpOpusInfo(std::string program_name, std::string more_info) :
-  Attribute(SIG_ATTRIBUTE_TYPES::SPC_SP_OPUS_INFO),
-  program_name_{std::move(program_name)},
-  more_info_{std::move(more_info)}
-{}
 
 void SpcSpOpusInfo::accept(Visitor& visitor) const {
   visitor.visit(*this);
@@ -52,8 +36,6 @@ std::string SpcSpOpusInfo::print() const {
   return out;
 }
 
-
-SpcSpOpusInfo::~SpcSpOpusInfo() = default;
 
 }
 }

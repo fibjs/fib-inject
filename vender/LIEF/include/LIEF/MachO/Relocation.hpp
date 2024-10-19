@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_MACHO_RELOCATION_COMMAND_H_
-#define LIEF_MACHO_RELOCATION_COMMAND_H_
-#include <string>
-#include <vector>
-#include <iostream>
-#include <array>
+#ifndef LIEF_MACHO_RELOCATION_COMMAND_H
+#define LIEF_MACHO_RELOCATION_COMMAND_H
+#include <ostream>
+#include <memory>
 
 #include "LIEF/Abstract/Relocation.hpp"
 
+#include "LIEF/MachO/Header.hpp"
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 #include "LIEF/Object.hpp"
-
-#include "LIEF/MachO/enums.hpp"
 
 namespace LIEF {
 namespace MachO {
-
 class BinaryParser;
+class Section;
+class SegmentCommand;
+class Symbol;
 
 //! Class that represents a Mach-O relocation
 //!
@@ -47,16 +45,26 @@ class LIEF_API Relocation : public LIEF::Relocation {
   using LIEF::Relocation::address;
   using LIEF::Relocation::size;
 
-  Relocation();
+  enum class ORIGIN {
+    UNKNOWN        = 0,
+    DYLDINFO       = 1,
+    RELOC_TABLE    = 2,
+    CHAINED_FIXUPS = 3,
+  };
+
+  static constexpr auto R_SCATTERED = uint32_t(0x80000000);
+  static constexpr auto R_ABS = uint32_t(0);
+
+  Relocation() = default;
   Relocation(uint64_t address, uint8_t type);
 
   Relocation& operator=(const Relocation& other);
   Relocation(const Relocation& other);
-  void swap(Relocation& other);
+  void swap(Relocation& other) noexcept;
 
-  ~Relocation() override;
+  ~Relocation() override = default;
 
-  virtual Relocation* clone() const = 0;
+  virtual std::unique_ptr<Relocation> clone() const = 0;
 
   //! Indicates whether the item containing the address to be
   //! relocated is part of a CPU instruction that uses PC-relative addressing.
@@ -75,43 +83,62 @@ class LIEF_API Relocation : public LIEF::Relocation {
   //!   * MachO::ARM_RELOCATION
   //!   * MachO::ARM64_RELOCATION
   //!   * MachO::REBASE_TYPES
-  virtual uint8_t type() const;
+  virtual uint8_t type() const {
+    return type_;
+  }
 
   //! Achitecture targeted by this relocation
-  CPU_TYPES architecture() const;
+  Header::CPU_TYPE architecture() const {
+    return architecture_;
+  }
 
   //! Origin of the relocation
-  virtual RELOCATION_ORIGINS origin() const = 0;
+  virtual ORIGIN origin() const = 0;
 
   //! ``true`` if the relocation has a symbol associated with
-  bool has_symbol() const;
+  bool has_symbol() const {
+    return symbol() != nullptr;
+  }
 
   //! Symbol associated with the relocation, if any,
   //! otherwise a nullptr.
-  Symbol* symbol();
-  const Symbol* symbol() const;
+  Symbol* symbol() {
+    return symbol_;
+  }
+  const Symbol* symbol() const {
+    return symbol_;
+  }
 
   //! ``true`` if the relocation has a section associated with
-  bool has_section() const;
+  bool has_section() const {
+    return section() != nullptr;
+  }
 
   //! Section associated with the relocation, if any,
   //! otherwise a nullptr.
-  Section* section();
-  const Section* section() const;
+  Section* section() {
+    return section_;
+  }
+  const Section* section() const {
+    return section_;
+  }
 
   //! ``true`` if the relocation has a SegmentCommand associated with
-  bool has_segment() const;
+  bool has_segment() const {
+    return segment() != nullptr;
+  }
 
   //! SegmentCommand associated with the relocation, if any,
   //! otherwise a nullptr.
-  SegmentCommand* segment();
-  const SegmentCommand* segment() const;
+  SegmentCommand* segment() {
+    return segment_;
+  }
+  const SegmentCommand* segment() const {
+    return segment_;
+  }
 
   virtual void pc_relative(bool val) = 0;
   virtual void type(uint8_t type);
-
-  bool operator==(const Relocation& rhs) const;
-  bool operator!=(const Relocation& rhs) const;
 
   void accept(Visitor& visitor) const override;
 
@@ -122,10 +149,13 @@ class LIEF_API Relocation : public LIEF::Relocation {
   protected:
   Symbol*         symbol_ = nullptr;
   uint8_t         type_ = 0;
-  CPU_TYPES       architecture_ = CPU_TYPES::CPU_TYPE_ANY;
+  Header::CPU_TYPE architecture_ = Header::CPU_TYPE::ANY;
   Section*        section_ = nullptr;
   SegmentCommand* segment_ = nullptr;
 };
+
+
+LIEF_API const char* to_string(Relocation::ORIGIN e);
 
 }
 }

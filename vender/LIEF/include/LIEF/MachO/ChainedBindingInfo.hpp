@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,11 @@
  */
 #ifndef LIEF_MACHO_CHAINED_BINDING_INFO_H
 #define LIEF_MACHO_CHAINED_BINDING_INFO_H
-#include <iostream>
+#include <ostream>
 
 #include "LIEF/visibility.h"
-#include "LIEF/types.hpp"
 #include "LIEF/MachO/BindingInfo.hpp"
-
-#include "LIEF/MachO/enums.hpp"
+#include "LIEF/MachO/DyldChainedFormat.hpp"
 
 namespace LIEF {
 namespace MachO {
@@ -51,54 +49,64 @@ class LIEF_API ChainedBindingInfo : public BindingInfo {
   friend class Builder;
 
   public:
+
   ChainedBindingInfo() = delete;
   explicit ChainedBindingInfo(DYLD_CHAINED_FORMAT fmt, bool is_weak);
 
   ChainedBindingInfo& operator=(ChainedBindingInfo other);
   ChainedBindingInfo(const ChainedBindingInfo& other);
-  ChainedBindingInfo(ChainedBindingInfo&&);
-  ChainedBindingInfo& operator=(ChainedBindingInfo&&);
+  ChainedBindingInfo(ChainedBindingInfo&&) noexcept;
 
-  void swap(ChainedBindingInfo& other);
+  void swap(ChainedBindingInfo& other) noexcept;
 
   //! Format of the imports
-  inline DYLD_CHAINED_FORMAT format() const {
+  DYLD_CHAINED_FORMAT format() const {
     return format_;
   }
 
   //! Format of the pointer
-  inline DYLD_CHAINED_PTR_FORMAT ptr_format() const {
+  DYLD_CHAINED_PTR_FORMAT ptr_format() const {
     return ptr_format_;
   }
 
   //! Original offset in the chain of this binding
-  inline uint32_t offset() const {
+  uint32_t offset() const {
     return offset_;
   }
 
-  inline void offset(uint32_t offset) {
+  void offset(uint32_t offset) {
     offset_ = offset;
   }
 
-  uint64_t address() const override;
-  void address(uint64_t address) override;
+  uint64_t address() const override {
+    return /* imagebase */ address_ + offset_;
+  }
+
+  void address(uint64_t address) override {
+    offset_ = address - /* imagebase */ address_;
+  }
 
   uint64_t sign_extended_addend() const;
 
-  inline BindingInfo::TYPES type() const override {
+  BindingInfo::TYPES type() const override {
     return BindingInfo::TYPES::CHAINED;
   }
 
-  ~ChainedBindingInfo() override;
+  static bool classof(const BindingInfo* info) {
+    return info->type() == BindingInfo::TYPES::CHAINED;
+  }
 
-  bool operator==(const ChainedBindingInfo& rhs) const;
-  bool operator!=(const ChainedBindingInfo& rhs) const;
+  ~ChainedBindingInfo() override {
+    clear();
+  }
 
   void accept(Visitor& visitor) const override;
 
-  LIEF_API friend std::ostream& operator<<(std::ostream& os, const ChainedBindingInfo& info);
-
-  static bool classof(const BindingInfo& info);
+  LIEF_API friend
+  std::ostream& operator<<(std::ostream& os, const ChainedBindingInfo& info) {
+    os << static_cast<const BindingInfo&>(info);
+    return os;
+  }
 
   private:
   void clear();

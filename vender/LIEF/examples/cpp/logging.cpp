@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,16 @@ int main(int argc, char **argv) {
   std::cout << "Parsing with DEBUG level" << '\n';
   std::cout << "========================" << '\n';
 
-  LIEF::logging::set_level(LIEF::logging::LOGGING_LEVEL::LOG_DEBUG);
+  LIEF::logging::set_level(LIEF::logging::LEVEL::DEBUG);
   std::unique_ptr<const LIEF::Binary> binary_global = LIEF::Parser::parse(argv[1]);
+
+  // Log a message with LIEF's logger
+  LIEF::logging::log(LIEF::logging::LEVEL::DEBUG, "Hi!");
+
+  // Log a formatted message with LIEF's logger
+  LIEF::logging::log(LIEF::logging::LEVEL::DEBUG, "Hi: {} here is your number: {}",
+    argv[0], std::to_string(argc)
+  );
 
   // Disable logger
   LIEF::logging::disable();

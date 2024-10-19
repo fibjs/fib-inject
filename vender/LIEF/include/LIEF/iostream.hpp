@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_OSTREAM_H_
-#define LIEF_OSTREAM_H_
-#include <istream>
-#include <streambuf>
+#ifndef LIEF_OSTREAM_H
+#define LIEF_OSTREAM_H
+#include <limits>
+#include <ios>
 #include <cstdint>
 #include <cstring>
 #include <vector>
@@ -32,21 +32,37 @@ class vector_iostream {
   static size_t sleb128_size(int64_t value);
   using pos_type = std::streampos;
   using off_type = std::streamoff;
-  vector_iostream();
-  vector_iostream(bool endian_swap);
-  void reserve(size_t size);
+  vector_iostream() = default;
+  vector_iostream(bool endian_swap) :
+    endian_swap_(endian_swap)
+  {}
+  void reserve(size_t size) {
+    raw_.reserve(size);
+  }
 
   vector_iostream& put(uint8_t c);
   vector_iostream& write(const uint8_t* s, std::streamsize n);
-  vector_iostream& write(span<const uint8_t> sp);
+  vector_iostream& write(span<const uint8_t> sp) {
+    return write(sp.data(), sp.size());
+  }
+
   vector_iostream& write(std::vector<uint8_t> s);
   vector_iostream& write(const std::string& s);
-  vector_iostream& write(size_t count, uint8_t value);
-  vector_iostream& write_sized_int(uint64_t value, size_t size);
-  vector_iostream& write(const vector_iostream& other);
+  vector_iostream& write(size_t count, uint8_t value) {
+    raw_.insert(std::end(raw_), count, value);
+    current_pos_ += count;
+    return *this;
+  }
+  vector_iostream& write_sized_int(uint64_t value, size_t size) {
+    const uint64_t stack_val = value;
+    return write(reinterpret_cast<const uint8_t*>(&stack_val), size);
+  }
+  vector_iostream& write(const vector_iostream& other) {
+    return write(other.raw());
+  }
 
-  template<class T, typename U = typename std::enable_if<!std::is_integral<T>::value>, T>
-  vector_iostream& write(const U& t) {
+  template<class T, typename = typename std::enable_if<std::is_standard_layout<T>::value && std::is_trivial<T>::value>::type>
+  vector_iostream& write(const T& t) {
     const auto pos = static_cast<size_t>(tellp());
     if (raw_.size() < (pos + sizeof(T))) {
       raw_.resize(pos + sizeof(T));
@@ -64,19 +80,9 @@ class vector_iostream {
 
   vector_iostream& align(size_t alignment, uint8_t fill = 0);
 
-  template<class Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>>
-  vector_iostream& write(Integer integer) {
-    const auto pos = static_cast<size_t>(tellp());
-    if (raw_.size() < (pos + sizeof(Integer))) {
-      raw_.resize(pos + sizeof(Integer));
-    }
-    memcpy(raw_.data() + pos, &integer, sizeof(Integer));
-    current_pos_ += sizeof(Integer);
-    return *this;
-  }
-
-  template<typename T, size_t size, typename = typename std::enable_if<std::is_integral<T>::value>>
+  template<typename T, size_t size>
   vector_iostream& write(const std::array<T, size>& t) {
+    static_assert(std::numeric_limits<T>::is_integer, "Requires integer type");
     for (T val : t) {
       write<T>(val);
     }
@@ -95,22 +101,46 @@ class vector_iostream {
   vector_iostream& write_uleb128(uint64_t value);
   vector_iostream& write_sleb128(int64_t value);
 
-  vector_iostream& get(std::vector<uint8_t>& c);
-  vector_iostream& move(std::vector<uint8_t>& c);
+  vector_iostream& get(std::vector<uint8_t>& c) {
+    c = raw_;
+    return *this;
+  }
+  vector_iostream& move(std::vector<uint8_t>& c) {
+    c = std::move(raw_);
+    return *this;
+  }
 
-  vector_iostream& flush();
+  vector_iostream& flush() {
+    return *this;
+  }
 
-  size_t size() const;
+  size_t size() const {
+    return raw_.size();
+  }
 
   // seeks:
-  pos_type tellp();
-  vector_iostream& seekp(pos_type p);
+  pos_type tellp() const {
+    return current_pos_;
+  }
+
+  vector_iostream& seekp(pos_type p) {
+    current_pos_ = p;
+    return *this;
+  }
+
   vector_iostream& seekp(vector_iostream::off_type p, std::ios_base::seekdir dir);
 
-  const std::vector<uint8_t>& raw() const;
-  std::vector<uint8_t>& raw();
+  const std::vector<uint8_t>& raw() const {
+    return raw_;
+  }
 
-  void set_endian_swap(bool swap);
+  std::vector<uint8_t>& raw() {
+    return raw_;
+  }
+
+  void set_endian_swap(bool swap) {
+    endian_swap_ = swap;
+  }
 
   private:
   pos_type             current_pos_ = 0;

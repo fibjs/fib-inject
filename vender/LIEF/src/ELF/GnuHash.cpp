@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
-
+#include "LIEF/Visitor.hpp"
 #include "LIEF/ELF/hash.hpp"
 
 #include "LIEF/ELF/utils.hpp"
@@ -25,15 +25,6 @@
 
 namespace LIEF {
 namespace ELF {
-
-GnuHash::GnuHash(GnuHash&&)                 = default;
-GnuHash& GnuHash::operator=(GnuHash&&)      = default;
-
-GnuHash& GnuHash::operator=(const GnuHash&) = default;
-GnuHash::GnuHash(const GnuHash&)            = default;
-GnuHash::~GnuHash()                         = default;
-GnuHash::GnuHash()                          = default;
-
 
 
 GnuHash::GnuHash(uint32_t symbol_idx, uint32_t shift2,
@@ -47,34 +38,6 @@ GnuHash::GnuHash(uint32_t symbol_idx, uint32_t shift2,
 {}
 
 
-uint32_t GnuHash::nb_buckets() const {
-  return static_cast<uint32_t>(buckets_.size());
-}
-
-uint32_t GnuHash::symbol_index() const {
-  return symbol_index_;
-}
-
-uint32_t GnuHash::maskwords() const {
-  return bloom_filters_.size();
-}
-
-uint32_t GnuHash::shift2() const {
-  return shift2_;
-}
-
-const std::vector<uint64_t>& GnuHash::bloom_filters() const {
-  return bloom_filters_;
-}
-
-const std::vector<uint32_t>& GnuHash::buckets() const {
-  return buckets_;
-}
-
-const std::vector<uint32_t>& GnuHash::hash_values() const {
-  return hash_values_;
-}
-
 bool GnuHash::check_bloom_filter(uint32_t hash) const {
   const size_t C = c_;
   const uint32_t h1 = hash;
@@ -86,11 +49,6 @@ bool GnuHash::check_bloom_filter(uint32_t hash) const {
   const uint32_t b2 = h2 % C;
   const uint64_t filter = bloom_filters()[n1];
   return ((filter >> b1) & (filter >> b2) & 1) != 0u;
-}
-
-
-bool GnuHash::check_bucket(uint32_t hash) const {
-  return buckets()[hash % nb_buckets()] > 0;
 }
 
 bool GnuHash::check(const std::string& symbol_name) const {
@@ -110,23 +68,10 @@ bool GnuHash::check(uint32_t hash) const {
   return true;
 }
 
-bool GnuHash::operator==(const GnuHash& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool GnuHash::operator!=(const GnuHash& rhs) const {
-  return !(*this == rhs);
-}
 
 void GnuHash::accept(Visitor& visitor) const {
   visitor.visit(*this);
 }
-
 
 std::ostream& operator<<(std::ostream& os, const GnuHash& gnuhash) {
   os << std::hex << std::left;
@@ -172,12 +117,12 @@ std::ostream& operator<<(std::ostream& os, const GnuHash& gnuhash) {
       });
   hash_values_str += "]";
 
-  os << std::setw(33) << std::setfill(' ') << "Number of buckets:"  << gnuhash.nb_buckets()   << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "First symbol index:" << gnuhash.symbol_index() << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Shift Count:"        << gnuhash.shift2()       << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Bloom filters:"      << bloom_filters_str      << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Buckets:"            << buckets_str            << std::endl;
-  os << std::setw(33) << std::setfill(' ') << "Hash values:"        << hash_values_str        << std::endl;
+  os << std::setw(33) << std::setfill(' ') << "Number of buckets:"  << gnuhash.nb_buckets()   << '\n';
+  os << std::setw(33) << std::setfill(' ') << "First symbol index:" << gnuhash.symbol_index() << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Shift Count:"        << gnuhash.shift2()       << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Bloom filters:"      << bloom_filters_str      << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Buckets:"            << buckets_str            << '\n';
+  os << std::setw(33) << std::setfill(' ') << "Hash values:"        << hash_values_str        << '\n';
 
 
 

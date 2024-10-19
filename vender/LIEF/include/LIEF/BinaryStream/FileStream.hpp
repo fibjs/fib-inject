@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,11 @@ namespace LIEF {
 class FileStream : public BinaryStream {
   public:
   static result<FileStream> from_file(const std::string& file);
-  FileStream(std::ifstream fs, uint64_t size);
+  FileStream(std::ifstream fs, uint64_t size) :
+    BinaryStream(STREAM_TYPE::FILE),
+    ifs_(std::move(fs)),
+    size_(size)
+  {}
 
   FileStream() = delete;
 
@@ -36,20 +40,22 @@ class FileStream : public BinaryStream {
   FileStream(const FileStream&) = delete;
   FileStream& operator=(const FileStream&) = delete;
 
-  FileStream(FileStream&& other);
-  FileStream& operator=(FileStream&& other);
+  FileStream(FileStream&& other) noexcept = default;
+  FileStream& operator=(FileStream&& other) noexcept = default;
 
-  inline uint64_t size() const override {
+  uint64_t size() const override {
     return size_;
   }
 
   std::vector<uint8_t> content() const;
-  ~FileStream() override;
+  ~FileStream() override = default;
 
-  static bool classof(const BinaryStream& stream);
+  static bool classof(const BinaryStream& stream) {
+    return stream.type() == STREAM_TYPE::FILE;
+  }
 
   protected:
-  inline ok_error_t peek_in(void* dst, uint64_t offset, uint64_t size) const override {
+  ok_error_t peek_in(void* dst, uint64_t offset, uint64_t size) const override {
     if (offset > size_ || offset + size > size_) {
       return make_error_code(lief_errors::read_error);
     }
@@ -59,7 +65,7 @@ class FileStream : public BinaryStream {
     ifs_.seekg(pos);
     return ok();
   }
-  inline result<const void*> read_at(uint64_t, uint64_t) const override {
+  result<const void*> read_at(uint64_t, uint64_t) const override {
     return make_error_code(lief_errors::not_supported);
   }
   mutable std::ifstream ifs_;

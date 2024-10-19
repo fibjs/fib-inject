@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  * Copyright 2017 - 2021 K. Nakagawa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@
 namespace LIEF {
 namespace PE {
 
-std::string to_json(const Object& v) {
+std::string to_json([[maybe_unused]] const Object& v) {
 #ifdef LIEF_JSON_SUPPORT
   JsonVisitor visitor;
   visitor(v);

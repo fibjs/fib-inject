@@ -1,157 +1,82 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import lief
-import unittest
-import logging
-import tempfile
-import shutil
-import os
-import sys
-import stat
-import subprocess
-import time
 import ctypes
-import zipfile
 import json
-import re
+import lief
+import os
+import pytest
+import stat
+from pathlib import Path
 
-from subprocess import Popen
+from utils import get_sample, is_windows, win_exec
 
-from unittest import TestCase
-from utils import get_sample
+if is_windows():
+    SEM_NOGPFAULTERRORBOX = 0x0002  # From MSDN
+    ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX)
 
-class TestPe(TestCase):
-    def setUp(self):
-        self.logger = logging.getLogger(__name__)
-        self.maxDiff = None
+def test_remove_section(tmp_path):
+    path = get_sample('PE/PE64_x86-64_remove_section.exe')
+    sample = lief.parse(path)
 
-        self.tmp_dir = tempfile.mkdtemp(suffix='_lief_tests')
-        self.logger.debug("temp dir: {}".format(self.tmp_dir))
+    output = tmp_path / "section_removed.exe"
 
+    sample.remove_section("lief")
+    sample.write(output.as_posix())
 
-        if sys.platform.startswith("win"):
-            SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
-            ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    st = os.stat(output)
+    os.chmod(output, st.st_mode | stat.S_IEXEC)
 
+    if ret := win_exec(output, gui = False):
+        ret_code, stdout = ret
+        assert "Hello World" in stdout
 
-    def test_code_view_pdb(self):
-        path = get_sample('PE/PE64_x86-64_binary_ConsoleApplication1.exe')
-        sample = lief.parse(path)
+def test_unwind():
 
-        self.assertTrue(sample.has_debug)
+    path = get_sample("PE/PE64_x86-64_binary_cmd.exe")
+    sample = lief.parse(path)
 
-        debug_code_view = list(filter(lambda deb: deb.has_code_view, sample.debug))
-        self.assertTrue(len(debug_code_view) == 1)
+    assert sample.original_size == Path(path).stat().st_size
 
-        debug = debug_code_view[0]
-        code_view = debug.code_view
+    functions = sorted(sample.functions, key=lambda f: f.address)
 
-        self.assertEqual(code_view.cv_signature, lief.PE.CODE_VIEW_SIGNATURES.PDB_70)
-        self.assertEqual(code_view.signature, [245, 217, 227, 182, 71, 113, 1, 79, 162, 3, 170, 71, 124, 74, 186, 84])
-        self.assertEqual(code_view.age, 1)
-        self.assertEqual(code_view.filename, r"c:\users\romain\documents\visual studio 2015\Projects\HelloWorld\x64\Release\ConsoleApplication1.pdb")
+    assert len(functions) == 829
 
-        json_view = json.loads(lief.to_json(debug))
-        self.assertDictEqual(json_view, {
-            'addressof_rawdata': 8996,
-            'characteristics': 0,
-            'code_view': {
-                'age': 1,
-                'cv_signature': 'PDB_70',
-                'filename': 'c:\\users\\romain\\documents\\visual studio 2015\\Projects\\HelloWorld\\x64\\Release\\ConsoleApplication1.pdb',
-                'signature': [245, 217, 227, 182, 71, 113, 1, 79, 162, 3, 170, 71, 124, 74, 186, 84]
-            },
-            'major_version': 0,
-            'minor_version': 0,
-            'pointerto_rawdata': 5412,
-            'sizeof_data': 125,
-            'timestamp': 1459952944,
-            'type': 'CODEVIEW'
-        })
+    assert functions[0].address == 4160
+    assert functions[0].size == 107
+    assert functions[0].name == ""
 
-    def test_remove_section(self):
-        path = get_sample('PE/PE64_x86-64_remove_section.exe')
-        sample = lief.parse(path)
+    assert functions[-1].address == 163896
+    assert functions[-1].size == 54
+    assert functions[-1].name == ""
 
-        output = os.path.join(self.tmp_dir, "section_removed.exe")
+def test_sections():
+    path = get_sample("PE/PE32_x86_binary_PGO-LTCG.exe")
+    pe = lief.parse(path)
+    assert pe.get_section(".text") is not None
+    assert pe.sections[0].name == ".text"
+    assert pe.sections[0].fullname == b".text\x00\x00\x00"
+    text = pe.sections[0]
+    assert text.copy() == text
+    text.name = ".foo"
+    assert text.name == ".foo"
+    print(text)
 
-        sample.remove_section("lief")
-        sample.write(output)
+def test_utils():
+    assert lief.PE.get_type(get_sample("PE/PE32_x86_binary_PGO-LTCG.exe")) == lief.PE.PE_TYPE.PE32
+    assert lief.PE.get_type(get_sample("ELF/ELF_Core_issue_808.core")) == lief.lief_errors.file_format_error
 
-        st = os.stat(output)
-        os.chmod(output, st.st_mode | stat.S_IEXEC)
+    with open(get_sample("PE/PE32_x86_binary_PGO-LTCG.exe"), "rb") as f:
+        buffer = list(f.read())
+        assert lief.PE.get_type(buffer) == lief.PE.PE_TYPE.PE32
 
-        if sys.platform.startswith("win"):
-            subprocess_flags = 0x8000000 # win32con.CREATE_NO_WINDOW?
-            p = Popen([output], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=subprocess_flags)
-
-            stdout, _ = p.communicate()
-            stdout = stdout.decode("utf8")
-            self.logger.debug(stdout)
-            self.assertIn("Hello World", stdout)
-
-    def test_unwind(self):
-
-        path = get_sample("PE/PE64_x86-64_binary_cmd.exe")
-        sample = lief.parse(path)
-
-        functions = sorted(sample.functions, key=lambda f: f.address)
-
-        self.assertEqual(len(functions), 829)
-
-        self.assertEqual(functions[0].address, 4160)
-        self.assertEqual(functions[0].size,    107)
-        self.assertEqual(functions[0].name,    "")
-
-        self.assertEqual(functions[-1].address, 163896)
-        self.assertEqual(functions[-1].size,    54)
-        self.assertEqual(functions[-1].name,    "")
-
-    def test_pgo(self):
-        path   = get_sample("PE/PE32_x86_binary_PGO-LTCG.exe")
-        sample = lief.parse(path)
-
-        debugs = sample.debug
-        self.assertEqual(len(debugs), 3)
-
-        debug_entry = debugs[2]
-
-        self.assertTrue(debug_entry.has_pogo)
-        pogo = debug_entry.pogo
-        self.assertEqual(pogo.signature, lief.PE.POGO_SIGNATURES.LCTG)
-
-        pogo_entries = pogo.entries
-        self.assertEqual(len(pogo_entries), 33)
-
-        self.assertEqual(pogo_entries[23].name,      ".xdata$x")
-        self.assertEqual(pogo_entries[23].start_rva, 0x8200)
-        self.assertEqual(pogo_entries[23].size,      820)
-
-
-    def test_sections(self):
-        path = get_sample("PE/PE32_x86_binary_PGO-LTCG.exe")
-        pe = lief.parse(path)
-        self.assertIsNotNone(pe.get_section(".text"))
-        self.assertEqual(pe.sections[0].name, ".text")
-        self.assertEqual(pe.sections[0].fullname.encode("utf8"), b".text\x00\x00\x00")
-
-    def tearDown(self):
-        # Delete it
-        try:
-            if os.path.isdir(self.tmp_dir):
-                shutil.rmtree(self.tmp_dir)
-        except Exception as e:
-            self.logger.error(e)
-
-if __name__ == '__main__':
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    root_logger.addHandler(ch)
-
-    unittest.main(verbosity=2)
-
+@pytest.mark.parametrize("pe_file", [
+    "PE/AcRes.dll",
+    "PE/test.delay.exe",
+    "PE/AppVClient.exe",
+])
+def test_json(pe_file):
+    pe = lief.PE.parse(get_sample(pe_file))
+    out = lief.to_json(pe)
+    assert out is not None
+    assert len(out) > 0
+    assert json.loads(out) is not None

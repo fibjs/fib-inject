@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  * Copyright 2017 - 2021 K. Nakagawa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIEF_PE_JSON_INTERNAL_H_
-#define LIEF_PE_JSON_INTERNAL_H_
+#ifndef LIEF_PE_JSON_INTERNAL_H
+#define LIEF_PE_JSON_INTERNAL_H
 
 #include "LIEF/visibility.h"
 #include "visitors/json.hpp"
@@ -70,7 +70,7 @@ class ContentInfo;
 class Attribute;
 class ContentType;
 class GenericType;
-//class MsCounterSign;
+class MsCounterSign;
 class MsSpcNestedSignature;
 class MsSpcStatementType;
 class PKCS9AtSequenceNumber;
@@ -78,6 +78,8 @@ class PKCS9CounterSignature;
 class PKCS9MessageDigest;
 class PKCS9SigningTime;
 class SpcSpOpusInfo;
+class SpcRelaxedPeMarkerCheck;
+class SigningCertificateV2;
 class CodeIntegrity;
 class LoadConfiguration;
 class LoadConfigurationV0;
@@ -88,8 +90,13 @@ class LoadConfigurationV4;
 class LoadConfigurationV5;
 class LoadConfigurationV6;
 class LoadConfigurationV7;
+class LoadConfigurationV8;
+class LoadConfigurationV9;
+class LoadConfigurationV10;
+class LoadConfigurationV11;
 class Pogo;
 class PogoEntry;
+class Repro;
 
 //! Class that implements the Visitor pattern to output
 //! a JSON representation of a PE object
@@ -137,17 +144,22 @@ class JsonVisitor : public LIEF::JsonVisitor {
   void visit(const x509& x509)                            override;
   void visit(const SignerInfo& signerinfo)                override;
   void visit(const ContentInfo& contentinfo)              override;
+  void visit(const GenericContent& content)               override;
+  void visit(const SpcIndirectData& content)              override;
   void visit(const Attribute& attr)                       override;
   void visit(const ContentType& attr)                     override;
   void visit(const GenericType& attr)                     override;
-  //void visit(const MsCounterSign& attr)                 override;
+  void visit(const MsCounterSign& attr)                   override;
   void visit(const MsSpcNestedSignature& attr)            override;
   void visit(const MsSpcStatementType& attr)              override;
+  void visit(const MsManifestBinaryID& attr)              override;
   void visit(const PKCS9AtSequenceNumber& attr)           override;
   void visit(const PKCS9CounterSignature& attr)           override;
   void visit(const PKCS9MessageDigest& attr)              override;
   void visit(const PKCS9SigningTime& attr)                override;
   void visit(const SpcSpOpusInfo& attr)                   override;
+  void visit(const SpcRelaxedPeMarkerCheck& attr)         override;
+  void visit(const SigningCertificateV2& attr)            override;
   void visit(const CodeIntegrity& code_integrity)         override;
   void visit(const LoadConfiguration& config)             override;
   void visit(const LoadConfigurationV0& config)           override;
@@ -158,9 +170,14 @@ class JsonVisitor : public LIEF::JsonVisitor {
   void visit(const LoadConfigurationV5& config)           override;
   void visit(const LoadConfigurationV6& config)           override;
   void visit(const LoadConfigurationV7& config)           override;
+  void visit(const LoadConfigurationV8& config)           override;
+  void visit(const LoadConfigurationV9& config)           override;
+  void visit(const LoadConfigurationV10& config)          override;
+  void visit(const LoadConfigurationV11& config)          override;
 
   void visit(const Pogo& pogo)        override;
   void visit(const PogoEntry& entry)  override;
+  void visit(const Repro& entry)      override;
 
   void visit(const LIEF::Binary& binary)   override;
   void visit(const LIEF::Symbol& symbol)   override;

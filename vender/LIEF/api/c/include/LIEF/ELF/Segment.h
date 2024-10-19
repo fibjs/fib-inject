@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,33 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef C_LIEF_ELF_SEGMENT_H_
-#define C_LIEF_ELF_SEGMENT_H_
+#ifndef LIEF_C_ELF_SEGMENT_H_
+#define LIEF_C_ELF_SEGMENT_H_
 
 #include <stdint.h>
 #include "LIEF/ELF/enums.h"
-
-/**  @defgroup elf_segment_c_api Segment
- *  @ingroup elf_c_api
- *  @addtogroup elf_segment_c_api
- *  @brief Segment C API
- *
- *  @{
- */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct Elf_Segment_t {
-  enum LIEF_ELF_SEGMENT_TYPES type;
-  uint32_t           flags;
-  uint64_t           virtual_address;
-  uint64_t           virtual_size;
-  uint64_t           offset;
-  uint64_t           alignment;
-  uint64_t           size;
-  uint8_t*           content;
+  uint32_t type;
+  uint32_t flags;
+  uint64_t virtual_address;
+  uint64_t virtual_size;
+  uint64_t offset;
+  uint64_t alignment;
+  uint64_t size;
+  uint8_t* content;
 };
 
 typedef struct Elf_Segment_t Elf_Segment_t;
@@ -48,5 +40,4 @@ typedef struct Elf_Segment_t Elf_Segment_t;
 }
 #endif
 
-/** @} */
 #endif

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ namespace PE {
 void init_c_dos_header(Pe_Binary_t* c_binary, Binary* binary) {
   const DosHeader& dos_header                      = binary->dos_header();
   c_binary->dos_header.magic                       = dos_header.magic();
-  c_binary->dos_header.used_bytes_in_the_last_page = dos_header.used_bytes_in_the_last_page();
+  c_binary->dos_header.used_bytes_in_last_page     = dos_header.used_bytes_in_last_page();
   c_binary->dos_header.file_size_in_pages          = dos_header.file_size_in_pages();
   c_binary->dos_header.numberof_relocation         = dos_header.numberof_relocation();
   c_binary->dos_header.header_size_in_paragraphs   = dos_header.header_size_in_paragraphs();

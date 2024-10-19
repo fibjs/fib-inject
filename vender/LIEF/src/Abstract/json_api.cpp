@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 namespace LIEF {
 
-std::string to_json_from_abstract(const Object& v) {
+std::string to_json_from_abstract([[maybe_unused]] const Object& v) {
 #if LIEF_JSON_SUPPORT
   AbstractJsonVisitor visitor;
   v.accept(visitor);

@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,116 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iostream>
-#include <iomanip>
+#include <ostream>
 
-#include "LIEF/PE/hash.hpp"
-#include "LIEF/exception.hpp"
-
+#include "LIEF/Visitor.hpp"
 #include "LIEF/PE/Section.hpp"
 #include "LIEF/PE/DataDirectory.hpp"
-#include "LIEF/PE/EnumToString.hpp"
 #include "PE/Structures.hpp"
 
+#include "frozen.hpp"
+
+#include <spdlog/fmt/fmt.h>
 
 namespace LIEF {
 namespace PE {
 
-DataDirectory::~DataDirectory() = default;
-
-DataDirectory::DataDirectory() = default;
-
-
-DataDirectory::DataDirectory(DATA_DIRECTORY type) :
-  type_{type}
-{}
-
-DataDirectory::DataDirectory(const details::pe_data_directory& header, DATA_DIRECTORY type) :
+DataDirectory::DataDirectory(const details::pe_data_directory& header,
+                             DataDirectory::TYPES type) :
   rva_{header.RelativeVirtualAddress},
   size_{header.Size},
   type_{type}
 {}
 
-DataDirectory::DataDirectory(const DataDirectory& other) = default;
-
-DataDirectory& DataDirectory::operator=(DataDirectory other) {
-  swap(other);
-  return *this;
-}
-
-void DataDirectory::swap(DataDirectory& other) {
-  std::swap(rva_,     other.rva_);
-  std::swap(size_,    other.size_);
-  std::swap(type_,    other.type_);
-  std::swap(section_, other.section_);
-}
-
-uint32_t DataDirectory::RVA() const {
-  return rva_;
-}
-
-
-uint32_t DataDirectory::size() const {
-  return size_;
-}
-
-
-bool DataDirectory::has_section() const {
-  return section_ != nullptr;
-}
-
-
-const Section* DataDirectory::section() const {
-  return section_;
-}
-
-Section* DataDirectory::section() {
-  return const_cast<Section*>(static_cast<const DataDirectory*>(this)->section());
-}
-
-DATA_DIRECTORY DataDirectory::type() const {
-  return type_;
-}
-
-void DataDirectory::RVA(uint32_t rva) {
-  rva_ = rva;
-}
-
-
-void DataDirectory::size(uint32_t size) {
-  size_ = size;
-}
-
 void DataDirectory::accept(LIEF::Visitor& visitor) const {
   visitor.visit(*this);
 }
 
-
-
-bool DataDirectory::operator==(const DataDirectory& rhs) const {
-  if (this == &rhs) {
-    return true;
-  }
-  size_t hash_lhs = Hash::hash(*this);
-  size_t hash_rhs = Hash::hash(rhs);
-  return hash_lhs == hash_rhs;
-}
-
-bool DataDirectory::operator!=(const DataDirectory& rhs) const {
-  return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& os, const DataDirectory& entry) {
-  os << std::hex;
-  os << "Data directory \"" << to_string(entry.type()) << "\"" << std::endl;
-  os << std::setw(10) << std::left << std::setfill(' ') << "RVA: 0x"  << entry.RVA()  << std::endl;
-  os << std::setw(10) << std::left << std::setfill(' ') << "Size: 0x" << entry.size() << std::endl;
-  if (entry.has_section()) {
-    os << std::setw(10) << std::left << std::setfill(' ') << "Section: " << entry.section()->name() << std::endl;
+  os << fmt::format("[{}] 0x{:04x} (0x{:04x} bytes)",
+                    to_string(entry.type()), entry.RVA(), entry.size());
+  if (const Section* section = entry.section()) {
+    os << fmt::format(" - '{}'", section->name());
   }
-
+  os << '\n';
   return os;
-
 }
+
+const char* to_string(DataDirectory::TYPES e) {
+  #define ENTRY(X) std::pair(DataDirectory::TYPES::X, #X)
+  STRING_MAP enums2str {
+    ENTRY(EXPORT_TABLE),
+    ENTRY(IMPORT_TABLE),
+    ENTRY(RESOURCE_TABLE),
+    ENTRY(EXCEPTION_TABLE),
+    ENTRY(CERTIFICATE_TABLE),
+    ENTRY(BASE_RELOCATION_TABLE),
+    ENTRY(DEBUG_DIR),
+    ENTRY(ARCHITECTURE),
+    ENTRY(GLOBAL_PTR),
+    ENTRY(TLS_TABLE),
+    ENTRY(LOAD_CONFIG_TABLE),
+    ENTRY(BOUND_IMPORT),
+    ENTRY(IAT),
+    ENTRY(DELAY_IMPORT_DESCRIPTOR),
+    ENTRY(CLR_RUNTIME_HEADER),
+    ENTRY(RESERVED),
+    ENTRY(UNKNOWN),
+  };
+  #undef ENTRY
+  if (auto it = enums2str.find(e); it != enums2str.end()) {
+    return it->second;
+  }
+  return "UNKNOWN";
+}
+
 }
 }

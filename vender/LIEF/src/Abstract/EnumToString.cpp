@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,6 @@
 
 namespace LIEF {
 
-const char* to_string(EXE_FORMATS e) {
-  CONST_MAP(EXE_FORMATS, const char*, 4) enumStrings {
-    { EXE_FORMATS::FORMAT_UNKNOWN, "UNKNOWN" },
-    { EXE_FORMATS::FORMAT_ELF,     "ELF"     },
-    { EXE_FORMATS::FORMAT_PE,      "PE"      },
-    { EXE_FORMATS::FORMAT_MACHO,   "MACHO"   },
-  };
-  const auto it = enumStrings.find(e);
-  return it == enumStrings.end() ? "UNDEFINED" : it->second;
-}
 
 const char* to_string(OBJECT_TYPES e) {
   CONST_MAP(OBJECT_TYPES, const char*, 4) enumStrings {
@@ -41,7 +31,7 @@ const char* to_string(OBJECT_TYPES e) {
 }
 
 const char* to_string(ARCHITECTURES e) {
-  CONST_MAP(ARCHITECTURES, const char*, 11) enumStrings {
+  CONST_MAP(ARCHITECTURES, const char*, 12) enumStrings {
     { ARCHITECTURES::ARCH_NONE,  "NONE"  },
     { ARCHITECTURES::ARCH_ARM,   "ARM"   },
     { ARCHITECTURES::ARCH_ARM64, "ARM64" },
@@ -53,6 +43,7 @@ const char* to_string(ARCHITECTURES e) {
     { ARCHITECTURES::ARCH_XCORE, "XCORE" },
     { ARCHITECTURES::ARCH_INTEL, "INTEL" },
     { ARCHITECTURES::ARCH_RISCV, "RISCV" },
+    { ARCHITECTURES::ARCH_LOONGARCH, "LOONGARCH" },
   };
   const auto it = enumStrings.find(e);
   return it == enumStrings.end() ? "UNDEFINED" : it->second;
@@ -91,20 +82,9 @@ const char* to_string(ENDIANNESS e) {
   return it == enumStrings.end() ? "UNDEFINED" : it->second;
 }
 
-const char* to_string(Binary::VA_TYPES e) {
-  CONST_MAP(Binary::VA_TYPES, const char*, 3) enumStrings {
-    { LIEF::Binary::VA_TYPES::AUTO, "AUTO" },
-    { LIEF::Binary::VA_TYPES::RVA,  "RVA"  },
-    { LIEF::Binary::VA_TYPES::VA,   "VA"   },
-  };
-  const auto it = enumStrings.find(e);
-  return it == enumStrings.end() ? "UNDEFINED" : it->second;
-}
-
-
 const char* to_string(Function::FLAGS e) {
   CONST_MAP(Function::FLAGS, const char*, 5) enumStrings {
-    { LIEF::Function::FLAGS::DEBUG,        "DEBUG"        },
+    { LIEF::Function::FLAGS::DEBUG_INFO,   "DEBUG_INFO"   },
     { LIEF::Function::FLAGS::CONSTRUCTOR,  "CONSTRUCTOR"  },
     { LIEF::Function::FLAGS::DESTRUCTOR,   "DESTRUCTOR"   },
     { LIEF::Function::FLAGS::IMPORTED,     "IMPORTED"     },

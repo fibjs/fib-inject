@@ -1,5 +1,5 @@
-/* Copyright 2017 - 2022 R. Thomas
- * Copyright 2017 - 2022 Quarkslab
+/* Copyright 2017 - 2024 R. Thomas
+ * Copyright 2017 - 2024 Quarkslab
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <iomanip>
-#include <fstream>
-
 #include "logging.hpp"
 
 #include "LIEF/utils.hpp"
+#include "LIEF/Visitor.hpp"
 
 #include "LIEF/PE/signature/Signature.hpp"
 #include "LIEF/PE/signature/OIDToString.hpp"
@@ -26,8 +24,7 @@
 
 #include "LIEF/PE/signature/Attribute.hpp"
 #include "LIEF/PE/signature/attributes.hpp"
-
-#include <mbedtls/asn1write.h>
+#include "LIEF/PE/signature/SpcIndirectData.hpp"
 
 #include <mbedtls/sha512.h>
 #include <mbedtls/sha256.h>
@@ -35,10 +32,8 @@
 
 #include <mbedtls/md5.h>
 
-#include "mbedtls/x509_crt.h"
-#include "mbedtls/x509.h"
-
 #include "frozen.hpp"
+#include "internal_utils.hpp"
 
 namespace LIEF {
 namespace PE {
@@ -89,7 +84,7 @@ Signature::VERIFICATION_FLAGS verify_ts_counter_signature(const SignerInfo& sign
   const x509& cs_cert = *cs_signer.cert();
   const SignerInfo::encrypted_digest_t& cs_enc_digest = cs_signer.encrypted_digest();
 
-  std::vector<uint8_t> cs_auth_data = cs_signer.raw_auth_data();
+  std::vector<uint8_t> cs_auth_data = as_vector(cs_signer.raw_auth_data());
   // According to the RFC:
   //
   // "[...] The Attributes value's tag is SET OF, and the DER encoding of
@@ -117,7 +112,7 @@ Signature::VERIFICATION_FLAGS verify_ts_counter_signature(const SignerInfo& sign
    */
 
   // Verify 1.
-  const auto* content_type_data = reinterpret_cast<const ContentType*>(cs_signer.get_auth_attribute(SIG_ATTRIBUTE_TYPES::CONTENT_TYPE));
+  const auto* content_type_data = static_cast<const ContentType*>(cs_signer.get_auth_attribute(Attribute::TYPE::CONTENT_TYPE));
   if (content_type_data == nullptr) {
     LIEF_WARN("Missing ContentType in authenticated attributes in the counter signature's signer");
     return flags | Signature::VERIFICATION_FLAGS::INVALID_SIGNER;
@@ -130,12 +125,12 @@ Signature::VERIFICATION_FLAGS verify_ts_counter_signature(const SignerInfo& sign
   }
 
   // Verify 3.
-  const auto* message_dg = reinterpret_cast<const PKCS9MessageDigest*>(cs_signer.get_auth_attribute(SIG_ATTRIBUTE_TYPES::PKCS9_MESSAGE_DIGEST));
+  const auto* message_dg = static_cast<const PKCS9MessageDigest*>(cs_signer.get_auth_attribute(Attribute::TYPE::PKCS9_MESSAGE_DIGEST));
   if (message_dg == nullptr) {
     LIEF_WARN("Missing MessageDigest in authenticated attributes in the counter signature's signer");
     return flags | Signature::VERIFICATION_FLAGS::INVALID_SIGNER;
   }
-  const std::vector<uint8_t>& dg_value = message_dg->digest();
+  const std::vector<uint8_t>& dg_value = as_vector(message_dg->digest());
   const std::vector<uint8_t> dg_cs_hash = Signature::hash(signer.encrypted_digest(), cs_digest_algo);
   if (dg_value != dg_cs_hash) {
     LIEF_WARN("MessageDigest mismatch with Hash(signer ED)");
@@ -146,7 +141,7 @@ Signature::VERIFICATION_FLAGS verify_ts_counter_signature(const SignerInfo& sign
    * Verify that signing's time is valid within the signer's certificate
    * validity window.
    */
-  const auto* signing_time = reinterpret_cast<const PKCS9SigningTime*>(cs_signer.get_auth_attribute(SIG_ATTRIBUTE_TYPES::PKCS9_SIGNING_TIME));
+  const auto* signing_time = static_cast<const PKCS9SigningTime*>(cs_signer.get_auth_attribute(Attribute::TYPE::PKCS9_SIGNING_TIME));
   if (signing_time != nullptr && !is_true(checks & Signature::VERIFICATION_CHECKS::SKIP_CERT_TIME)) {
     LIEF_DEBUG("PKCS #9 signing time found");
     PKCS9SigningTime::time_t time = signing_time->time();
@@ -166,15 +161,15 @@ Signature::VERIFICATION_FLAGS verify_ts_counter_signature(const SignerInfo& sign
 }
 
 
-std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITHMS algo) {
+std::vector<uint8_t> Signature::hash(const uint8_t* buffer, size_t size, ALGORITHMS algo) {
   switch (algo) {
 
     case ALGORITHMS::SHA_512:
       {
         std::vector<uint8_t> out(64);
-        int ret = mbedtls_sha512(input.data(), input.size(), out.data(), /* is384 */ 0);
+        int ret = mbedtls_sha512(buffer, size, out.data(), /* is384 */ 0);
         if (ret != 0) {
-          LIEF_ERR("Hashing {} bytes with SHA-512 failed! (ret: 0x{:x})", input.size(), ret);
+          LIEF_ERR("Hashing {} bytes with SHA-512 failed! (ret: 0x{:x})", size, ret);
           return {};
         }
         return out;
@@ -183,9 +178,9 @@ std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITH
     case ALGORITHMS::SHA_384:
       {
         std::vector<uint8_t> out(64);
-        int ret = mbedtls_sha512(input.data(), input.size(), out.data(), /* is384 */ 1);
+        int ret = mbedtls_sha512(buffer, size, out.data(), /* is384 */ 1);
         if (ret != 0) {
-          LIEF_ERR("Hashing {} bytes with SHA-384 failed! (ret: 0x{:x})", input.size(), ret);
+          LIEF_ERR("Hashing {} bytes with SHA-384 failed! (ret: 0x{:x})", size, ret);
           return {};
         }
         return out;
@@ -194,9 +189,9 @@ std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITH
     case ALGORITHMS::SHA_256:
       {
         std::vector<uint8_t> out(32);
-        int ret = mbedtls_sha256(input.data(), input.size(), out.data(), /* is224 */ 0);
+        int ret = mbedtls_sha256(buffer, size, out.data(), /* is224 */ 0);
         if (ret != 0) {
-          LIEF_ERR("Hashing {} bytes with SHA-256 failed! (ret: 0x{:x})", input.size(), ret);
+          LIEF_ERR("Hashing {} bytes with SHA-256 failed! (ret: 0x{:x})", size, ret);
           return {};
         }
         return out;
@@ -205,9 +200,9 @@ std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITH
     case ALGORITHMS::SHA_1:
       {
         std::vector<uint8_t> out(20);
-        int ret = mbedtls_sha1(input.data(), input.size(), out.data());
+        int ret = mbedtls_sha1(buffer, size, out.data());
         if (ret != 0) {
-          LIEF_ERR("Hashing {} bytes with SHA-1 failed! (ret: 0x{:x})", input.size(), ret);
+          LIEF_ERR("Hashing {} bytes with SHA-1 failed! (ret: 0x{:x})", size, ret);
           return {};
         }
         return out;
@@ -216,9 +211,9 @@ std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITH
     case ALGORITHMS::MD5:
       {
         std::vector<uint8_t> out(16);
-        int ret = mbedtls_md5(input.data(), input.size(), out.data());
+        int ret = mbedtls_md5(buffer, size, out.data());
         if (ret != 0) {
-          LIEF_ERR("Hashing {} bytes with MD5 failed! (ret: 0x{:x})", input.size(), ret);
+          LIEF_ERR("Hashing {} bytes with MD5 failed! (ret: 0x{:x})", size, ret);
           return {};
         }
         return out;
@@ -230,23 +225,6 @@ std::vector<uint8_t> Signature::hash(const std::vector<uint8_t>& input, ALGORITH
       }
   }
   return {};
-}
-
-uint32_t Signature::version() const {
-  return version_;
-}
-
-
-const ContentInfo& Signature::content_info() const {
-  return content_info_;
-}
-
-Signature::it_const_crt Signature::certificates() const {
-  return certificates_;
-}
-
-Signature::it_const_signers_t Signature::signers() const {
-  return signers_;
 }
 
 Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const {
@@ -265,6 +243,12 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
   }
   const SignerInfo& signer = signers_.back();
 
+  if (!SpcIndirectData::classof(&content_info_.value())) {
+    LIEF_WARN("ContentInfo type is not SpcIndirectData");
+    return flags | VERIFICATION_FLAGS::CORRUPTED_CONTENT_INFO;
+  }
+  const auto& spc_indirect_data = static_cast<const SpcIndirectData&>(content_info_.value());
+
   // Check that Signature.digest_algorithm matches:
   // - SignerInfo.digest_algorithm
   // - ContentInfo.digest_algorithm
@@ -274,7 +258,7 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
     return flags | VERIFICATION_FLAGS::UNSUPPORTED_ALGORITHM;
   }
 
-  if (digest_algorithm_ != content_info_.digest_algorithm()) {
+  if (digest_algorithm_ != spc_indirect_data.digest_algorithm()) {
     LIEF_WARN("Digest algorithm is different from ContentInfo");
     return flags | VERIFICATION_FLAGS::INCONSISTENT_DIGEST_ALGORITHM;
   }
@@ -284,7 +268,7 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
     return flags | VERIFICATION_FLAGS::INCONSISTENT_DIGEST_ALGORITHM;
   }
 
-  const ALGORITHMS digest_algo = content_info().digest_algorithm();
+  const ALGORITHMS digest_algo = spc_indirect_data.digest_algorithm();
 
   if (signer.cert() == nullptr) {
     LIEF_WARN("Can't find certificate for which the issuer is {}", signer.issuer());
@@ -309,17 +293,22 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
     return flags | VERIFICATION_FLAGS::CORRUPTED_CONTENT_INFO;
   }
 
+  if (original_raw_signature_.empty()) {
+    LIEF_WARN("Original raw signature is empty");
+    return flags | VERIFICATION_FLAGS::CORRUPTED_CONTENT_INFO;
+  }
+
   std::vector<uint8_t> raw_content_info = {
     std::begin(original_raw_signature_) + content_info_start_,
     std::begin(original_raw_signature_) + content_info_end_
   };
 
-  const std::vector<uint8_t> content_info_hash = Signature::hash(std::move(raw_content_info), digest_algo);
+  const std::vector<uint8_t> content_info_hash = Signature::hash(raw_content_info, digest_algo);
 
 
   // Copy authenticated attributes
   SignerInfo::it_const_attributes_t auth_attrs = signer.authenticated_attributes();
-  if (auth_attrs.size() > 0) {
+  if (!auth_attrs.empty()) {
 
     std::vector<uint8_t> auth_data = signer.raw_auth_data_;
     // According to the RFC:
@@ -340,7 +329,7 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
     // Check that content_info_hash matches pkcs9-message-digest
     auto it_pkcs9_digest = std::find_if(std::begin(auth_attrs), std::end(auth_attrs),
         [] (const Attribute& attr) {
-          return attr.type() == SIG_ATTRIBUTE_TYPES::PKCS9_MESSAGE_DIGEST;
+          return attr.type() == Attribute::TYPE::PKCS9_MESSAGE_DIGEST;
         });
 
     if (it_pkcs9_digest == std::end(auth_attrs)) {
@@ -348,9 +337,9 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
       return flags | VERIFICATION_FLAGS::MISSING_PKCS9_MESSAGE_DIGEST;
     }
 
-    const auto& digest_attr = reinterpret_cast<const PKCS9MessageDigest&>(*it_pkcs9_digest);
+    const auto& digest_attr = static_cast<const PKCS9MessageDigest&>(*it_pkcs9_digest);
     LIEF_DEBUG("pkcs9-message-digest:\n  {}\n  {}", hex_dump(digest_attr.digest()), hex_dump(content_info_hash));
-    if (digest_attr.digest() != content_info_hash) {
+    if (as_vector(digest_attr.digest()) != content_info_hash) {
       return flags | VERIFICATION_FLAGS::BAD_DIGEST;
     }
   } else {
@@ -365,16 +354,9 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
   /*
    * CounterSignature Checks
    */
-  const auto* counter = reinterpret_cast<const PKCS9CounterSignature*>(signer.get_unauth_attribute(SIG_ATTRIBUTE_TYPES::PKCS9_COUNTER_SIGNATURE));
-  bool has_ms_counter_sig = false;
-  for (const Attribute& attr : signer.unauthenticated_attributes()) {
-    if (attr.type() == SIG_ATTRIBUTE_TYPES::GENERIC_TYPE) {
-      if (reinterpret_cast<const GenericType&>(attr).oid() == /* Ms-CounterSign */ "1.3.6.1.4.1.311.3.3.1") {
-        has_ms_counter_sig = true;
-        break;
-      }
-    }
-  }
+  const auto* counter = static_cast<const PKCS9CounterSignature*>(signer.get_unauth_attribute(Attribute::TYPE::PKCS9_COUNTER_SIGNATURE));
+  bool has_ms_counter_sig = signer.get_unauth_attribute(Attribute::TYPE::MS_COUNTER_SIGN) != nullptr;
+
   bool timeless_signature = false;
   if (counter != nullptr) {
     VERIFICATION_FLAGS cs_flags = verify_ts_counter_signature(signer, *counter, checks);
@@ -402,11 +384,6 @@ Signature::VERIFICATION_FLAGS Signature::check(VERIFICATION_CHECKS checks) const
 
   }
   return flags;
-}
-
-
-const std::vector<uint8_t>& Signature::raw_der() const {
-  return original_raw_signature_;
 }
 
 
@@ -474,23 +451,23 @@ inline void print_attr(SignerInfo::it_const_attributes_t& attrs, std::ostream& o
   for (const Attribute& attr : attrs) {
     std::string suffix;
     switch (attr.type()) {
-      case SIG_ATTRIBUTE_TYPES::CONTENT_TYPE:
+      case Attribute::TYPE::CONTENT_TYPE:
         {
-          const auto& ct = reinterpret_cast<const ContentType&>(attr);
+          const auto& ct = static_cast<const ContentType&>(attr);
           suffix = ct.oid() + " (" + oid_to_string(ct.oid()) + ")";
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::MS_SPC_STATEMENT_TYPE:
+      case Attribute::TYPE::MS_SPC_STATEMENT_TYPE:
         {
-          const auto& ct = reinterpret_cast<const MsSpcStatementType&>(attr);
+          const auto& ct = static_cast<const MsSpcStatementType&>(attr);
           suffix = ct.oid() + " (" + oid_to_string(ct.oid()) + ")";
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::SPC_SP_OPUS_INFO:
+      case Attribute::TYPE::SPC_SP_OPUS_INFO:
         {
-          const auto& ct = reinterpret_cast<const SpcSpOpusInfo&>(attr);
+          const auto& ct = static_cast<const SpcSpOpusInfo&>(attr);
           if (!ct.program_name().empty()) {
             suffix = ct.program_name();
           }
@@ -503,52 +480,52 @@ inline void print_attr(SignerInfo::it_const_attributes_t& attrs, std::ostream& o
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::PKCS9_MESSAGE_DIGEST:
+      case Attribute::TYPE::PKCS9_MESSAGE_DIGEST:
         {
-          const auto& ct = reinterpret_cast<const PKCS9MessageDigest&>(attr);
+          const auto& ct = static_cast<const PKCS9MessageDigest&>(attr);
           suffix = hex_dump(ct.digest()).substr(0, 41) + "...";
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::MS_SPC_NESTED_SIGN:
+      case Attribute::TYPE::MS_SPC_NESTED_SIGN:
         {
-          const auto& nested_attr = reinterpret_cast<const MsSpcNestedSignature&>(attr);
+          const auto& nested_attr = static_cast<const MsSpcNestedSignature&>(attr);
           const Signature& ct = nested_attr.sig();
           auto signers = ct.signers();
           auto crts = ct.certificates();
-          if (signers.size() > 0) {
+          if (!signers.empty()) {
             suffix = signers[0].issuer();
-          } else if (crts.size() > 0) {
+          } else if (!crts.empty()) {
             suffix = crts[0].issuer();
           }
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::GENERIC_TYPE:
+      case Attribute::TYPE::GENERIC_TYPE:
         {
-          const auto& ct = reinterpret_cast<const GenericType&>(attr);
+          const auto& ct = static_cast<const GenericType&>(attr);
           suffix = ct.oid();
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::PKCS9_AT_SEQUENCE_NUMBER:
+      case Attribute::TYPE::PKCS9_AT_SEQUENCE_NUMBER:
         {
-          const auto& ct = reinterpret_cast<const PKCS9AtSequenceNumber&>(attr);
+          const auto& ct = static_cast<const PKCS9AtSequenceNumber&>(attr);
           suffix = std::to_string(ct.number());
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::PKCS9_COUNTER_SIGNATURE:
+      case Attribute::TYPE::PKCS9_COUNTER_SIGNATURE:
         {
-          const auto& ct = reinterpret_cast<const PKCS9CounterSignature&>(attr);
+          const auto& ct = static_cast<const PKCS9CounterSignature&>(attr);
           const SignerInfo& signer = ct.signer();
           suffix = signer.issuer();
           break;
         }
 
-      case SIG_ATTRIBUTE_TYPES::PKCS9_SIGNING_TIME:
+      case Attribute::TYPE::PKCS9_SIGNING_TIME:
         {
-          const auto& ct = reinterpret_cast<const PKCS9SigningTime&>(attr);
+          const auto& ct = static_cast<const PKCS9SigningTime&>(attr);
           const PKCS9SigningTime::time_t time = ct.time();
           suffix = fmt::format("{}/{}/{} - {}:{}:{}",
                               time[0], time[1], time[2], time[3], time[4], time[5]);
@@ -568,10 +545,14 @@ std::ostream& operator<<(std::ostream& os, const Signature& signature) {
   const ContentInfo& cinfo = signature.content_info();
   os << fmt::format("Version:             {:d}\n", signature.version());
   os << fmt::format("Digest Algorithm:    {}\n", to_string(signature.digest_algorithm()));
-  os << fmt::format("Content Info Digest: {}\n", hex_dump(cinfo.digest()));
-  if (!cinfo.file().empty()) {
-    os << fmt::format("Content Info File:   {}\n", cinfo.file());
+  if (SpcIndirectData::classof(&cinfo.value())) {
+    const auto& spc_indirect_data = static_cast<const SpcIndirectData&>(cinfo.value());
+    os << fmt::format("Content Info Digest: {}\n", hex_dump(spc_indirect_data.digest()));
+    if (!spc_indirect_data.file().empty()) {
+      os << fmt::format("Content Info File:   {}\n", spc_indirect_data.file());
+    }
   }
+
   Signature::it_const_crt certs = signature.certificates();
   os << fmt::format("#{:d} certificate(s):\n", certs.size());
   for (const x509& crt : certs) {
@@ -586,13 +567,13 @@ std::ostream& operator<<(std::ostream& os, const Signature& signature) {
     os << fmt::format("Encryption:   {}\n", to_string(signer.encryption_algorithm()));
     os << fmt::format("Encrypted DG: {} ...\n", hex_dump(signer.encrypted_digest()).substr(0, 41));
     SignerInfo::it_const_attributes_t auth_attr = signer.authenticated_attributes();
-    if (auth_attr.size() > 0) {
+    if (!auth_attr.empty()) {
       os << fmt::format("#{:d} authenticated attributes:\n", auth_attr.size());
       print_attr(auth_attr, os);
     }
 
     SignerInfo::it_const_attributes_t unauth_attr = signer.unauthenticated_attributes();
-    if (unauth_attr.size() > 0) {
+    if (!unauth_attr.empty()) {
       os << fmt::format("#{:d} un-authenticated attributes:\n", unauth_attr.size());
       print_attr(unauth_attr, os);
     }
