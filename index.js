@@ -139,4 +139,6 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
     } catch {
         throw new Error("Couldn't write executable");
     }
+
+    return executableFormat;
 }
