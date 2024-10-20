@@ -29,7 +29,9 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
     }
 
     LIEF::ELF::ARCH machine_type = binary->header().machine_type();
-    if (machine_type == LIEF::ELF::ARCH::LOONGARCH || machine_type == LIEF::ELF::ARCH::MIPS) {
+    if (machine_type == LIEF::ELF::ARCH::LOONGARCH
+        || machine_type == LIEF::ELF::ARCH::MIPS
+        || machine_type == LIEF::ELF::ARCH::RISCV) {
         result.Set("result", Napi::Number::New(env, InjectResult::kError));
         return result;
     }
