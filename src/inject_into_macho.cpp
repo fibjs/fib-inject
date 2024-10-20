@@ -8,7 +8,7 @@ Napi::Value inject_into_macho(const Napi::CallbackInfo& info)
     Napi::Env env = info.Env();
 
     if (info.Length() < 4 || !info[0].IsBuffer() || !info[1].IsString() || !info[2].IsString() || !info[3].IsBuffer()) {
-        Napi::TypeError::New(env, "Expected (Buffer, string, string, Buffer, boolean)").ThrowAsJavaScriptException();
+        Napi::TypeError::New(env, "Expected (Buffer, string, string, Buffer)").ThrowAsJavaScriptException();
         return env.Null();
     }
 
@@ -16,7 +16,6 @@ Napi::Value inject_into_macho(const Napi::CallbackInfo& info)
     std::string segment_name = info[1].As<Napi::String>();
     std::string section_name = info[2].As<Napi::String>();
     Napi::Buffer<uint8_t> data = info[3].As<Napi::Buffer<uint8_t>>();
-    bool overwrite = info.Length() > 4 ? info[4].As<Napi::Boolean>() : false;
 
     Napi::Object result = Napi::Object::New(env);
     result.Set("data", env.Undefined());
@@ -32,11 +31,6 @@ Napi::Value inject_into_macho(const Napi::CallbackInfo& info)
         LIEF::MachO::Section* existing_section = binary.get_section(section_name);
 
         if (existing_section) {
-            if (!overwrite) {
-                result.Set("result", Napi::Number::New(env, InjectResult::kAlreadyExists));
-                return result;
-            }
-
             binary.remove_section(section_name, true);
         }
 

@@ -7,15 +7,14 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 4 || !info[0].IsBuffer() || !info[1].IsString() || !info[2].IsBuffer() || !info[3].IsBoolean()) {
-        Napi::TypeError::New(env, "Expected (Buffer, string, Buffer, boolean)").ThrowAsJavaScriptException();
+    if (info.Length() < 3 || !info[0].IsBuffer() || !info[1].IsString() || !info[2].IsBuffer()) {
+        Napi::TypeError::New(env, "Expected (Buffer, string, Buffer)").ThrowAsJavaScriptException();
         return env.Null();
     }
 
     Napi::Buffer<uint8_t> executable = info[0].As<Napi::Buffer<uint8_t>>();
     std::string note_name = info[1].As<Napi::String>();
     Napi::Buffer<uint8_t> data = info[2].As<Napi::Buffer<uint8_t>>();
-    bool overwrite = info[3].As<Napi::Boolean>();
 
     Napi::Object result = Napi::Object::New(env);
     result.Set("data", env.Undefined());
@@ -46,12 +45,7 @@ Napi::Value inject_into_elf(const Napi::CallbackInfo& info)
     }
 
     if (existing_note) {
-        if (!overwrite) {
-            result.Set("result", Napi::Number::New(env, InjectResult::kAlreadyExists));
-            return result;
-        } else {
-            binary->remove(*existing_note);
-        }
+        binary->remove(*existing_note);
     }
 
     std::unique_ptr<LIEF::ELF::Note> note = LIEF::ELF::Note::create(note_name, LIEF::ELF::Note::TYPE::GNU_BUILD_ATTRIBUTE_OPEN,

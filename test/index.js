@@ -14,18 +14,17 @@ const inject_file = path.join(__dirname, "inject.exe");
 describe('fib-inject', () => {
     it("ExecutableFormat", () => {
         assert.deepEqual(inject.ExecutableFormat, {
-            "kELF": 0,
-            "kMachO": 1,
-            "kPE": 2,
-            "kUnknown": 3
+            "kUnknown": 0,
+            "kELF": 1,
+            "kMachO": 2,
+            "kPE": 3
         });
     });
 
     it("InjectResult", () => {
         assert.deepEqual(inject.InjectResult, {
-            "kAlreadyExists": 0,
-            "kError": 1,
-            "kSuccess": 2
+            "kSuccess": 0,
+            "kError": 1
         });
     });
 
@@ -56,7 +55,9 @@ describe('fib-inject', () => {
         });
 
         fs.copyFile(test_file, inject_file);
-        inject.inject(inject_file, 'foobar', Buffer.from("Hello, fib-inject!"));
+        inject.inject(inject_file, 'foobar', Buffer.from("Hello, fib-inject!"), {
+            subsystem: "gui"
+        });
 
         if (process.platform === 'darwin')
             child_process.execFile(`codesign`, ["-s", "-", inject_file]);

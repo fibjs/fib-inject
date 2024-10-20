@@ -1,16 +1,15 @@
 #include <napi.h>
 
 enum ExecutableFormat {
+    kUnknown,
     kELF,
     kMachO,
-    kPE,
-    kUnknown
+    kPE
 };
 
 enum InjectResult {
-    kAlreadyExists,
-    kError,
-    kSuccess
+    kSuccess,
+    kError
 };
 
 // format detection declarations
