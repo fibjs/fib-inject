@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require('path');
 
 module.exports = inject = require(`./addon/${path.basename(__dirname)}.node`);
-module.exports.inject = function (filename, resourceName, resourceData, options) {
+
+function injectBuffer(executable, resourceName, resourceData, options) {
     const machoSegmentName = options?.machoSegmentName || "__FIBINJECT";
     const sentinelFuse = options?.sentinelFuse || "FIBINJECT_SENTINEL_d0695dd05effa072dcb0b1f8f807ac40";
     const subsystem = options?.subsystem || "cui";
@@ -11,23 +12,14 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
         throw new Error("Subsystem must be either 'cui' or 'gui'");
     }
 
+    if (!Buffer.isBuffer(executable)) {
+        throw new TypeError("executable must be a buffer");
+    }
+
     if (!Buffer.isBuffer(resourceData)) {
         throw new TypeError("resourceData must be a buffer");
     }
 
-    try {
-        fs.accessSync(filename, fs.constants.R_OK | fs.constants.W_OK);
-    } catch {
-        throw new Error("Can't read and write to target executable");
-    }
-
-    let executable;
-
-    try {
-        executable = fs.readFileSync(filename);
-    } catch {
-        throw new Error("Couldn't read target executable");
-    }
     const executableFormat = inject.get_executable_format(executable);
 
     if (executableFormat === inject.ExecutableFormat.kUnknown) {
@@ -133,6 +125,30 @@ module.exports.inject = function (filename, resourceName, resourceData, options)
             )}' was found`
         );
     }
+
+    return {
+        executableFormat,
+        buffer
+    };
+}
+module.exports.injectBuffer = injectBuffer;
+
+module.exports.inject = function (filename, resourceName, resourceData, options) {
+    try {
+        fs.accessSync(filename, fs.constants.R_OK | fs.constants.W_OK);
+    } catch {
+        throw new Error("Can't read and write to target executable");
+    }
+
+    let executable;
+
+    try {
+        executable = fs.readFileSync(filename);
+    } catch {
+        throw new Error("Couldn't read target executable");
+    }
+
+    const { executableFormat, buffer } = injectBuffer(executable, resourceName, resourceData, options);
 
     try {
         fs.writeFileSync(filename, buffer);
