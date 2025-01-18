@@ -20,7 +20,7 @@ function injectBuffer(executable, resourceName, resourceData, options) {
         throw new TypeError("resourceData must be a buffer");
     }
 
-    const executableFormat = inject.get_executable_format(executable);
+    const executableFormat = options?.format || inject.get_executable_format(executable);
 
     if (executableFormat === inject.ExecutableFormat.kUnknown) {
         throw new Error(
