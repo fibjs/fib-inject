@@ -1954,6 +1954,12 @@ void Binary::shift_dynamic_entries(uint64_t from, uint64_t shift) {
 void Binary::shift_symbols(uint64_t from, uint64_t shift) {
   LIEF_DEBUG("Shift symbols by 0x{:x} from 0x{:x}", shift, from);
   for (Symbol& symbol : symbols()) {
+    // TLS symbols' values are offsets within the TLS block, not virtual
+    // addresses. They must not be shifted even if they numerically fall
+    // after `from` (e.g. a large TLS block).
+    if (symbol.type() == Symbol::TYPE::TLS) {
+      continue;
+    }
     if (symbol.value() >= from) {
       LIEF_DEBUG("[BEFORE] {}", to_string(symbol));
       symbol.value(symbol.value() + shift);
